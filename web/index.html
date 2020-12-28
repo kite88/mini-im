@@ -63,7 +63,10 @@
                                     <span class="nickname float-left">{{item.nickname}}</span>
                                     <span class="time float-right">{{item.time}}</span>
                                 </div>
-                                <div><span class="msg-content float-left">{{item.message}}</span></div>
+                                <div>
+                                    <span v-if="item.content_type === 2" class="msg-content float-left">[动画表情]</span>
+                                    <span v-else class="msg-content float-left">{{item.message}}</span>
+                                </div>
                             </div>
                         </li>
                     </ul>
@@ -91,21 +94,27 @@
                             <div class="avatar float-right">
                                 <img :src="item.avatar" alt="">
                             </div>
-                            <span class="triangle-right float-right"></span>
-                            <div class="message-txt message-txt-r float-right">{{item.msgContent}}</div>
+                            <div v-if="item.content_type === 2" class="float-right" v-html="item.msgContent"></div>
+                            <template v-else>
+                                <span class="triangle-right float-right"></span>
+                                <div class="message-txt message-txt-r float-right">{{item.msgContent}}</div>
+                            </template>
                         </li>
                         <li v-if="item.type === 2">
                             <div class="avatar float-left">
                                 <img :src="item.avatar" alt="">
                             </div>
-                            <span class="triangle-left float-left"></span>
-                            <div class="message-txt message-txt-l float-left">{{item.msgContent}}</div>
+                            <div v-if="item.content_type === 2" class="float-left" v-html="item.msgContent"></div>
+                            <template v-else>
+                                <span class="triangle-left float-left"></span>
+                                <div class="message-txt message-txt-l float-left">{{item.msgContent}}</div>
+                            </template>
                         </li>
                     </template>
                 </ul>
                 <div class="chat-edit">
                     <div class="chat-edit-head">
-                        <div v-show="isEmojiShow" class="emoji-box">
+                        <div v-show="isEmojiShow = boxEmojiShow === 1" class="emoji-box">
                             <a class="emoji">😀</a>
                             <a class="emoji">😃</a>
                             <a class="emoji">😄</a>
@@ -274,15 +283,31 @@
                             <a class="emoji">👨</a>
                             <a class="emoji">🧔</a>
                         </div>
+                        <div v-show="isEmojiShow = boxEmojiShow === 2" class="emoji-box">
+                            <a class="emoji-image"><img src="/web/assets/image/emoji/1.jpeg" alt=""></a>
+                            <a class="emoji-image"><img src="/web/assets/image/emoji/2.jpeg" alt=""></a>
+                            <a class="emoji-image"><img src="/web/assets/image/emoji/3.jpeg" alt=""></a>
+                            <a class="emoji-image"><img src="/web/assets/image/emoji/1.jpeg" alt=""></a>
+                            <a class="emoji-image"><img src="/web/assets/image/emoji/2.jpeg" alt=""></a>
+                            <a class="emoji-image"><img src="/web/assets/image/emoji/3.jpeg" alt=""></a>
+                            <a class="emoji-image"><img src="/web/assets/image/emoji/1.jpeg" alt=""></a>
+                            <a class="emoji-image"><img src="/web/assets/image/emoji/2.jpeg" alt=""></a>
+                            <a class="emoji-image"><img src="/web/assets/image/emoji/3.jpeg" alt=""></a>
+                            <a class="emoji-image"><img src="/web/assets/image/emoji/3.jpeg" alt=""></a>
+                        </div>
                         <div class="chat-edit-btn-box">
-                            <a @click.stop="isEmojiShow = true" class="chat-edit-head-btn" title="表情">😊</a>
+                            <a @click.stop="boxEmojiShow = 1" class="chat-edit-head-btn" title="表情"><img
+                                    src="/web/assets/image/emoji-btn-small.jpg" alt=""></a>
+                            <a @click.stop="boxEmojiShow = 2" class="chat-edit-head-btn" title="表情"><img
+                                    src="/web/assets/image/emoji-btn-big.jpg"
+                                    alt=""></a>
                         </div>
                     </div>
                     <div class="chat-edit-cont">
                         <textarea id="chat-textarea" v-model="sendChatCont"></textarea>
                     </div>
                     <div class="chat-edit-foot">
-                        <button @click="sendChat" class="btn btn-xs btn-success chat-btn-send" title="ctrl+Enter">发送
+                        <button @click="sendChat(1)" class="btn btn-xs btn-success chat-btn-send" title="ctrl+Enter">发送
                         </button>
                     </div>
                 </div>
@@ -343,6 +368,7 @@
             chatList: [],
             sendChatCont: '',
             isEmojiShow: false,
+            boxEmojiShow: 0,
             isUserInfoBoxShow: false,
             socketConn: null,
             to_uid: '',
@@ -375,13 +401,21 @@
             var chatTextarea = document.getElementById('chat-textarea');
             chatTextarea.onkeydown = function (event) {
                 if (event.key === 'Enter' && event.ctrlKey) {
-                    _this.sendChat()
+                    _this.sendChat(1)
                 }
             }
             var emojiDom = document.getElementsByClassName('emoji');
             for (var i = 0; i < emojiDom.length; i++) {
                 emojiDom[i].onclick = function () {
                     _this.sendChatCont = _this.sendChatCont + this.innerHTML;
+                }
+            }
+            var emojiImageDom = document.getElementsByClassName('emoji-image')
+            for (var i = 0; i < emojiImageDom.length; i++) {
+                emojiImageDom[i].onclick = function () {
+                    let str = '<img style="width:80px;height:80px" src="' + this.firstChild.getAttribute('src') + '">'
+                    _this.sendChatCont = str
+                    _this.sendChat(2)
                 }
             }
         },
@@ -397,7 +431,7 @@
             },
             forBoxSwitch(v) {
                 this.isUserInfoBoxShow = v
-                this.isEmojiShow = v
+                this.boxEmojiShow = 0
             },
             wsInit() {
                 _this = this
@@ -565,15 +599,16 @@
                 if (data.sender === '') return
                 //添加到聊天对应的内容列表
                 let isChat = 0
-                if (cache.isChat(this.sender + '_' + data.recipient)){
+                if (cache.isChat(this.sender + '_' + data.recipient)) {
                     isChat = 1
                 }
                 let chatList = this.getServerChatList(data.sender, data.recipient)
-                if (isChat === 0){
+                if (isChat === 0) {
                     chatList.push({
                         avatar: data.subjoin.avatar,
                         msgContent: data.content,
                         create_time: data.time,
+                        content_type: data.content_type * 1,
                         type: 2,
                     })
                 }
@@ -583,10 +618,11 @@
                     this.chatList.push({
                         avatar: this.to_avatar,
                         msgContent: data.content,
+                        content_type: data.content_type * 1,
                         type: 2
                     })
                     this.scrollBottom()
-                    this.updateMessageList(data.content)
+                    this.updateMessageList(data.content, data.content_type)
                 } else {
                     var list = this.messageList
                     var tempItem = null
@@ -595,6 +631,7 @@
                             list[i].msgCount += 1
                             list[i].message = data.content
                             list[i].time = dateUtil.formatTime(data.time * 1)
+                            list[i].content_type = data.content_type * 1
                             tempItem = list[i]
                             list.splice(i, 1)
                             break
@@ -605,7 +642,8 @@
                                 nickname: data.subjoin.nickname,
                                 msgCount: 1,
                                 message: data.content,
-                                time: dateUtil.formatTime(data.time * 1)
+                                time: dateUtil.formatTime(data.time * 1),
+                                content_type: data.content_type * 1,
                             }
                         }
                     }
@@ -617,7 +655,7 @@
                     cache.saveMessage(list)
                 }
             },
-            sendChat() {
+            sendChat(contentType) {
                 if (!this.to_uid) {
                     this.alertBox('请选择聊天对象', '温馨提示', null, null)
                     return
@@ -630,6 +668,7 @@
                     "sender": "",
                     "recipient": this.to_uid,
                     "content": this.sendChatCont,
+                    "content_type": contentType + '',
                     "subjoin": {
                         "avatar": this.to_avatar,
                         "nickname": this.to_nickname,
@@ -641,12 +680,14 @@
                 this.chatList.push({
                     avatar: this.user.avatar,
                     msgContent: this.sendChatCont,
+                    content_type: contentType * 1,
                     type: 1
                 })
                 this.scrollBottom()
-                this.updateMessageList(this.sendChatCont)
+                this.updateMessageList(this.sendChatCont, contentType + '')
                 this.sendChatCont = ''
                 //添加到聊天对应的内容列表
+                console.log(this.chatList)
                 cache.saveChat(this.user.id + '_' + this.to_uid, this.chatList)
             },
             sendSocket(str) {
@@ -656,13 +697,14 @@
                 }
                 this.socketConn.send(str)
             },
-            updateMessageList(msgContent) {
+            updateMessageList(msgContent, contentType) {
                 var list = this.messageList
                 var tempItem = null
                 for (i in list) {
                     if (list[i].uid.toString() === this.to_uid) {
                         list[i].message = msgContent
                         list[i].time = dateUtil.formatTime(Math.round(new Date() / 1000))
+                        list[i].content_type = contentType * 1
                         tempItem = list[i]
                         list.splice(i, 1)
                     } else {
@@ -672,6 +714,7 @@
                             nickname: this.to_nickname,
                             msgCount: 0,
                             message: msgContent,
+                            content_type: contentType * 1,
                             time: dateUtil.formatTime(Math.round(new Date() / 1000))
                         }
                     }
@@ -703,7 +746,7 @@
                     }).then(res => {
                         if (res.data.StatusCode === 0) {
                             profile.del()
-                            this.socketConn.close()
+                            _this.socketConn.close()
                             cache.clearMessage()
                             cache.clearFriend()
                             sessionStorage.removeItem('isLoadMessageData')

@@ -302,6 +302,13 @@ ul {
     cursor: pointer;
 }
 
+.emoji-box .emoji-image img {
+    width: 108px;
+    height: 108px;
+    padding: 5px;
+    cursor: pointer;
+}
+
 .chat-edit .chat-edit-head .chat-edit-btn-box {
     padding-top: 5px;
     height: 25px;
@@ -309,7 +316,11 @@ ul {
 
 .chat-edit .chat-edit-head .chat-edit-head-btn {
     cursor: pointer;
-    text-decoration: none;
+}
+
+.chat-edit .chat-edit-head .chat-edit-head-btn img {
+    width: 20px;
+    height: 20px;
 }
 
 .chat-edit .chat-edit-cont textarea {

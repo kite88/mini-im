@@ -27,11 +27,12 @@ type Client struct {
 }
 
 type Message struct {
-	Sender    string `json:"sender"`
-	Recipient string `json:"recipient"`
-	Content   string `json:"content"`
-	Time      string `json:"time"`
-	Subjoin   struct {
+	Sender      string `json:"sender"`
+	Recipient   string `json:"recipient"`
+	Content     string `json:"content"`
+	Time        string `json:"time"`
+	ContentType string `json:"content_type"`
+	Subjoin     struct {
 		Avatar   string `json:"avatar"`
 		Nickname string `json:"nickname"`
 	} `json:"subjoin"`
@@ -114,8 +115,9 @@ func (c *Client) Read(uid string) {
 		uidInt64, _ := strconv.ParseInt(messageData.Sender, 10, 64)
 		fidInt64, _ := strconv.ParseInt(messageData.Recipient, 10, 64)
 		timeInt64, _ := strconv.ParseInt(messageData.Time, 10, 64)
+		contentTypeInt64, _ := strconv.ParseInt(messageData.ContentType, 10, 64)
 		mModel := model.MessageModel{
-			ContentType: 1,
+			ContentType: contentTypeInt64,
 			Content:     messageData.Content,
 			CreateTime:  timeInt64,
 			UserId:      uidInt64,

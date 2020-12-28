@@ -64,10 +64,11 @@ func ChatList(uid int64, fuid int64) []model.MessageModel {
 }
 
 type Messages struct {
-	Time    int64           `json:"time"`
-	Message string          `json:"message"`
-	Uid     int64           `json:"uid"`
-	User    model.UserModel `json:"user"`
+	Time        int64           `json:"time"`
+	Message     string          `json:"message"`
+	ContentType int64           `json:"content_type"`
+	Uid         int64           `json:"uid"`
+	User        model.UserModel `json:"user"`
 }
 
 func MessageList(uid int64) []Messages {
@@ -103,9 +104,10 @@ func MessageList(uid int64) []Messages {
 			tempUid = item.UserId
 		}
 		messages = append(messages, Messages{
-			Time:    item.CreateTime,
-			Message: item.Content,
-			Uid:     tempUid,
+			Time:        item.CreateTime,
+			Message:     item.Content,
+			Uid:         tempUid,
+			ContentType: item.ContentType,
 		})
 		uids2 = append(uids2, tempUid)
 	}
