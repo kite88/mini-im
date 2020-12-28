@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>miniIM登录 - BLN</title>
+    <meta name="keywords" content="IM系统,客服系统,h5聊天工具,web聊天工具,h5即时通讯,web即时通讯"/>
+    <meta name="description" content="这是一个基于websocket的聊天工具"/>
+    <link rel="shortcut icon" href="/web/favicon.ico">
+    <link rel="stylesheet" href="/web/assets/lib/bootstrap-3.3.7/css/bootstrap.min.css">
+    <script src="/web/assets/lib/jquery-2.1.1/jquery.min.js"></script>
+    <script src="/web/assets/lib/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/web/assets/css/1.0.0/common.css">
+    <link rel="stylesheet" href="/web/assets/css/1.0.0/login.css">
+</head>
+<body>
+<div id="app" class="container">
+    <div class="login-box col-md-3">
+        <h1>miniIM</h1>
+        <form class="form-horizontal" role="form">
+            <div class="form-group">
+                <label for="username" class="col-sm-2 control-label">用户</label>
+                <div class="col-sm-10">
+                    <input type="text" v-model="username" class="form-control" id="username" placeholder="请输入用户名">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="password" class="col-sm-2 control-label">密码</label>
+                <div class="col-sm-10">
+                    <input type="password" v-model="password" class="form-control" id="password" placeholder="请输入用户密码">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <div class="checkbox">
+                        <label>
+                            <input v-model="isRemember" type="checkbox">请记住我
+                        </label>
+                        <a v-show="isRememberMe" href="javascript:" @click="clearPwd" class="clear-password">清除密码缓存</a>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <button @click="login" type="button" class="btn btn-success btn-sm">登录</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="shade" v-show="alertBoxParam.isShow">
+        <div class="alert-box" v-show="alertBoxParam.isShow">
+            <div class="alert-box-head">
+                <span class="alert-box-title">{{alertBoxParam.title}}</span>
+                <span class="alert-box-close" @click="alertBoxParam.isShow = false">✕</span>
+            </div>
+            <div class="alert-box-msg">{{alertBoxParam.msg}}</div>
+            <div class="alert-box-foot">
+                <span class="alert-box-btn" @click="alertBoxParam.btnHandleFunc" v-if="alertBoxParam.btnText !== null">{{alertBoxParam.btnText}}</span>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script src="/web/assets/lib/vue-2.6.12/vue.min.js"></script>
+<script src="/web/assets/lib/axios-v0.21.0/axios.min.js"></script>
+<script src="/web/conf.js"></script>
+<script src="/web/assets/js/profile.js"></script>
+<script src="/web/assets/js/util/cookie.util.js"></script>
+<script src="/web/assets/js/util/crypt.util.js"></script>
+<script src="/web/assets/js/cache.data.js"></script>
+<script>
+    var profile = new Profile();
+    var cookieUtil = new CookieUtil();
+    var cryptUtil = new CryptUtil();
+    var cache = new CacheData();
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            alertBoxParam: {
+                isShow: false,
+                title: '',
+                msg: '',
+                btnText: '',
+                btnHandleFunc: function () {
+                    this.isShow = false
+                }
+            },
+            username: '',
+            password: '',
+            isRemember: false,
+            isRememberMe: false
+        },
+        created() {
+            if (profile.get() !== null) {
+                location.href = 'index.html'
+            }
+            var rememberMe = cookieUtil.get('RememberMe')
+            if (rememberMe) {
+                this.isRememberMe = true
+                var u = cryptUtil.decrypt(rememberMe)
+                this.username = u.username
+                this.password = u.password
+                this.isRemember = true
+            }
+        },
+        mounted() {
+        },
+        methods: {
+            alertBox(msg, title = null, btnText = null, btnFunc = null) {
+                this.alertBoxParam.isShow = true
+                this.alertBoxParam.title = (title === null) ? '提示' : title
+                this.alertBoxParam.btnText = btnText
+                this.alertBoxParam.msg = msg
+                if (btnFunc !== null) {
+                    this.alertBoxParam.btnHandleFunc = btnFunc
+                }
+            },
+            clearPwd() {
+                cookieUtil.del('RememberMe')
+                this.isRememberMe = false
+                this.isRemember = false
+                this.password = ''
+                this.username = ''
+                console.log('clear password success.')
+            },
+            login() {
+                if (!this.username) {
+                    return this.alertBox('请输入用户名')
+                }
+                if (!this.password) {
+                    return this.alertBox('请输入密码')
+                }
+                axios({
+                    url: apiDomain + '/api/login',
+                    method: 'post',
+                    data: {
+                        username: this.username,
+                        password: this.password
+                    }
+                }).catch(function (err) {
+                    console.log(err)
+                }).then(res => {
+                    if (res.data.StatusCode === 0) {
+                        profile.save(res.data.Data)
+                        if (this.isRemember === true) {
+                            cookieUtil.set('RememberMe', cryptUtil.encrypt({
+                                username: this.username,
+                                password: this.password
+                            }), 60 * 60 * 24 * 7)
+                        } else {
+                            cookieUtil.del('RememberMe')
+                        }
+                        cache.clearMessage()
+                        cache.clearFriend()
+                        sessionStorage.removeItem('isLoadMessageData')
+                        sessionStorage.removeItem('isLoadFriendData')
+                        location.href = 'index.html'
+                    } else {
+                        this.alertBox(res.data.Message)
+                    }
+                })
+            }
+        },
+    })
+</script>
+</html>

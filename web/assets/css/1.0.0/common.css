@@ -1,0 +1,75 @@
+.alert-box {
+    width: 300px;
+    height: 120px;
+    position: absolute;
+    z-index: 10;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    margin: 15% auto;
+    border: 1px solid #c0c0c0;
+    box-shadow: 3px 3px 3px #888888;
+    background-color: #ffffff;
+}
+
+.alert-box .alert-box-head {
+    background-color: #5e5e5e;
+    width: 100%;
+    display: inline-block;
+    padding: 5px;
+}
+
+.alert-box .alert-box-head .alert-box-title {
+    font-size: 10px;
+    color: #ffffff;
+    font-weight: bold;
+    float: left;
+}
+
+.alert-box .alert-box-head .alert-box-close {
+    font-size: 12px;
+    color: #ffffff;
+    font-weight: bold;
+    float: right;
+    width: 20px;
+    background-color: rgba(255, 0, 0, 0.8);
+    border-radius: 2px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.alert-box .alert-box-msg {
+    font-size: 14px;
+    text-align: left;
+    color: #777777;
+    padding: 5px;
+}
+
+.alert-box .alert-box-foot {
+    width: 100%;
+    display: inline-block;
+    position: absolute;
+    bottom: 0;
+    padding: 5px;
+}
+
+.alert-box .alert-box-btn {
+    padding: 4px 8px;
+    background-color: rgba(255, 0, 0, 0.8);
+    color: #ffffff;
+    font-size: 10px;
+    float: right;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.shade {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, .2);
+    left: 0;
+    top: 0;
+    z-index: 9;
+}

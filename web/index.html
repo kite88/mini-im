@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>miniIM - BLN</title>
+    <meta name="keywords" content="IM系统,客服系统,h5聊天工具,web聊天工具,h5即时通讯,web即时通讯"/>
+    <meta name="description" content="这是一个基于websocket的聊天工具"/>
+    <link rel="shortcut icon" href="/web/favicon.ico">
+    <link rel="stylesheet" href="/web/assets/lib/bootstrap-3.3.7/css/bootstrap.min.css">
+    <script src="/web/assets/lib/jquery-2.1.1/jquery.min.js"></script>
+    <script src="/web/assets/lib/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/web/assets/css/1.0.0/common.css">
+    <link rel="stylesheet" href="/web/assets/css/1.0.0/style.css">
+</head>
+<body>
+<div id="app" class="container">
+    <h1>miniIM</h1>
+    <div class="cont-box" @click="forBoxSwitch(false)">
+        <div class="col-md-4 left-box">
+            <div class="col-md-2 left-nav">
+                <div class="user-info-box" v-show="isUserInfoBoxShow">
+                    <div class="user-info-avatar">
+                        <img alt="" :src="user.avatar">
+                    </div>
+                    <div class="user-info-nickname-account">
+                        <div class="user-info-nickname">{{user.nickname}}</div>
+                        <div class="user-info-account">账号：{{user.username}}</div>
+                    </div>
+                    <div class="user-info-logout">
+                        <button @click="logout" type="button" class="btn btn-sm btn-danger">退出登录</button>
+                    </div>
+                </div>
+                <ul>
+                    <li class="avatar-li"><img class="avatar" alt="" :src="user.avatar"
+                                               v-on:click.stop="isUserInfoBoxShow = true"></li>
+                    <li @click="navTop(1)" class="nav-btn" v-bind:class="{ 'nav-btn-active' : navBtnActive === 1}"><span
+                            class="glyphicon glyphicon-comment"></span></li>
+                    <li @click="navTop(2)" class="nav-btn" v-bind:class="{ 'nav-btn-active' : navBtnActive === 2}"><span
+                            class="glyphicon glyphicon-align-left"></span></li>
+                </ul>
+            </div>
+            <div class="col-md-10 left-list-box">
+                <div class="search-box">
+                    <label>
+                        <input @keyup="searchList" v-model="searchData" size="100%" class="search-input"
+                               type="text" placeholder="搜索">
+                    </label>
+                </div>
+                <div class="left-list">
+                    <ul class="message-list" v-if="navBtnActive === 1">
+                        <li @click="nextFun(item)" v-for="item in messageList">
+                            <div class="avatar float-left">
+                                <img :src="item.avatar" alt="">
+                            </div>
+                            <div class="msg-count-box" v-show="item.msgCount">
+                                <span class="msg-count">{{item.msgCount}}</span>
+                            </div>
+                            <div class="info">
+                                <div>
+                                    <span class="nickname float-left">{{item.nickname}}</span>
+                                    <span class="time float-right">{{item.time}}</span>
+                                </div>
+                                <div><span class="msg-content float-left">{{item.message}}</span></div>
+                            </div>
+                        </li>
+                    </ul>
+                    <ul class="friend-list" v-else-if="navBtnActive === 2">
+                        <li @click="nextFun(item)" v-for="item in friendList">
+                            <div class="avatar float-left">
+                                <img :src="item.avatar">
+                            </div>
+                            <div class="nickname">
+                                {{item.nickname}}
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 right-box">
+            <div class="right-box-top">
+                {{rightTitle}}
+            </div>
+            <div class="right-box-content">
+                <ul class="chat-list">
+                    <template v-for="item in chatList">
+                        <li v-if="item.type === 1">
+                            <div class="avatar float-right">
+                                <img :src="item.avatar" alt="">
+                            </div>
+                            <span class="triangle-right float-right"></span>
+                            <div class="message-txt message-txt-r float-right">{{item.msgContent}}</div>
+                        </li>
+                        <li v-if="item.type === 2">
+                            <div class="avatar float-left">
+                                <img :src="item.avatar" alt="">
+                            </div>
+                            <span class="triangle-left float-left"></span>
+                            <div class="message-txt message-txt-l float-left">{{item.msgContent}}</div>
+                        </li>
+                    </template>
+                </ul>
+                <div class="chat-edit">
+                    <div class="chat-edit-head">
+                        <div v-show="isEmojiShow" class="emoji-box">
+                            <a class="emoji">😀</a>
+                            <a class="emoji">😃</a>
+                            <a class="emoji">😄</a>
+                            <a class="emoji">😁</a>
+                            <a class="emoji">😆</a>
+                            <a class="emoji">😅</a>
+                            <a class="emoji">🤣</a>
+                            <a class="emoji">😂</a>
+                            <a class="emoji">🙂</a>
+                            <a class="emoji">🙃</a>
+                            <a class="emoji">😉</a>
+                            <a class="emoji">😊</a>
+                            <a class="emoji">😇</a>
+                            <a class="emoji">🥰</a>
+                            <a class="emoji">😍</a>
+                            <a class="emoji">🤩</a>
+                            <a class="emoji">😘</a>
+                            <a class="emoji">😗</a>
+                            <a class="emoji">😚</a>
+                            <a class="emoji">😙</a>
+                            <a class="emoji">😋</a>
+                            <a class="emoji">😛</a>
+                            <a class="emoji">😜</a>
+                            <a class="emoji">🤪</a>
+                            <a class="emoji">😝</a>
+                            <a class="emoji">🤑</a>
+                            <a class="emoji">🤗</a>
+                            <a class="emoji">🤭</a>
+                            <a class="emoji">🤫</a>
+                            <a class="emoji">🤔</a>
+                            <a class="emoji">🤐</a>
+                            <a class="emoji">🤨</a>
+                            <a class="emoji">😐</a>
+                            <a class="emoji">😑</a>
+                            <a class="emoji">😶</a>
+                            <a class="emoji">😏</a>
+                            <a class="emoji">😒</a>
+                            <a class="emoji">🙄</a>
+                            <a class="emoji">😬</a>
+                            <a class="emoji">🤥</a>
+                            <a class="emoji">😌</a>
+                            <a class="emoji">😔</a>
+                            <a class="emoji">😪</a>
+                            <a class="emoji">🤤</a>
+                            <a class="emoji">😴</a>
+                            <a class="emoji">😷</a>
+                            <a class="emoji">🤒</a>
+                            <a class="emoji">🤕</a>
+                            <a class="emoji">🤢</a>
+                            <a class="emoji">🤮</a>
+                            <a class="emoji">🤧</a>
+                            <a class="emoji">🥵</a>
+                            <a class="emoji">🥶</a>
+                            <a class="emoji">🥴</a>
+                            <a class="emoji">😵</a>
+                            <a class="emoji">🤯</a>
+                            <a class="emoji">🤠</a>
+                            <a class="emoji">🥳</a>
+                            <a class="emoji">😎</a>
+                            <a class="emoji">🤓</a>
+                            <a class="emoji">🧐</a>
+                            <a class="emoji">😕</a>
+                            <a class="emoji">😟</a>
+                            <a class="emoji">🙁</a>
+                            <a class="emoji">☹️</a>
+                            <a class="emoji">😮</a>
+                            <a class="emoji">😯</a>
+                            <a class="emoji">😲</a>
+                            <a class="emoji">😳</a>
+                            <a class="emoji">🥺</a>
+                            <a class="emoji">😦</a>
+                            <a class="emoji">😧</a>
+                            <a class="emoji">😨</a>
+                            <a class="emoji">😰</a>
+                            <a class="emoji">😥</a>
+                            <a class="emoji">😢</a>
+                            <a class="emoji">😭</a>
+                            <a class="emoji">😱</a>
+                            <a class="emoji">😖</a>
+                            <a class="emoji">😣</a>
+                            <a class="emoji">😞</a>
+                            <a class="emoji">😓</a>
+                            <a class="emoji">😩</a>
+                            <a class="emoji">😫</a>
+                            <!--<a class="emoji">🥱</a>-->
+                            <a class="emoji">😤</a>
+                            <a class="emoji">😡</a>
+                            <a class="emoji">😠</a>
+                            <a class="emoji">🤬</a>
+                            <a class="emoji">😈</a>
+                            <a class="emoji">👿</a>
+                            <a class="emoji">💀</a>
+                            <a class="emoji">☠️</a>
+                            <a class="emoji">💩</a>
+                            <a class="emoji">🤡</a>
+                            <a class="emoji">👹</a>
+                            <a class="emoji">👺</a>
+                            <a class="emoji">👻</a>
+                            <a class="emoji">👽</a>
+                            <a class="emoji">👾</a>
+                            <a class="emoji">🤖</a>
+                            <a class="emoji">😺</a>
+                            <a class="emoji">😸</a>
+                            <a class="emoji">😹</a>
+                            <a class="emoji">😻</a>
+                            <a class="emoji">😼</a>
+                            <a class="emoji">😽</a>
+                            <a class="emoji">🙀</a>
+                            <a class="emoji">😿</a>
+                            <a class="emoji">😾</a>
+                            <a class="emoji">💋</a>
+                            <a class="emoji">👋</a>
+                            <a class="emoji">🤚</a>
+                            <a class="emoji">🖐️</a>
+                            <a class="emoji">✋</a>
+                            <a class="emoji">🖖</a>
+                            <a class="emoji">👌</a>
+                            <!--<a class="emoji">🤏</a>-->
+                            <a class="emoji">✌️</a>
+                            <a class="emoji">🤞</a>
+                            <a class="emoji">🤟</a>
+                            <a class="emoji">🤘</a>
+                            <a class="emoji">🤙</a>
+                            <a class="emoji">👈</a>
+                            <a class="emoji">👉</a>
+                            <a class="emoji">👆</a>
+                            <a class="emoji">🖕</a>
+                            <a class="emoji">👇</a>
+                            <a class="emoji">☝️</a>
+                            <a class="emoji">👍</a>
+                            <a class="emoji">👎</a>
+                            <a class="emoji">✊</a>
+                            <a class="emoji">👊</a>
+                            <a class="emoji">🤛</a>
+                            <a class="emoji">🤜</a>
+                            <a class="emoji">👏</a>
+                            <a class="emoji">🙌</a>
+                            <a class="emoji">👐</a>
+                            <a class="emoji">🤲</a>
+                            <a class="emoji">🤝</a>
+                            <a class="emoji">🙏</a>
+                            <a class="emoji">✍️</a>
+                            <a class="emoji">💅</a>
+                            <a class="emoji">🤳</a>
+                            <a class="emoji">💪</a>
+                            <!--<a class="emoji">🦾</a>
+                            <a class="emoji">🦿</a>-->
+                            <a class="emoji">🦵</a>
+                            <a class="emoji">🦶</a>
+                            <a class="emoji">👂</a>
+                            <!--<a class="emoji">🦻</a>-->
+                            <a class="emoji">👃</a>
+                            <a class="emoji">🧠</a>
+                            <a class="emoji">🦷</a>
+                            <a class="emoji">🦴</a>
+                            <a class="emoji">👀</a>
+                            <a class="emoji">👁️</a>
+                            <a class="emoji">👅</a>
+                            <a class="emoji">👄</a>
+                            <a class="emoji">👶</a>
+                            <a class="emoji">🧒</a>
+                            <a class="emoji">👦</a>
+                            <a class="emoji">👧</a>
+                            <a class="emoji">🧑</a>
+                            <a class="emoji">👱</a>
+                            <a class="emoji">👨</a>
+                            <a class="emoji">🧔</a>
+                        </div>
+                        <div class="chat-edit-btn-box">
+                            <a @click.stop="isEmojiShow = true" class="chat-edit-head-btn" title="表情">😊</a>
+                        </div>
+                    </div>
+                    <div class="chat-edit-cont">
+                        <textarea id="chat-textarea" v-model="sendChatCont"></textarea>
+                    </div>
+                    <div class="chat-edit-foot">
+                        <button @click="sendChat" class="btn btn-xs btn-success chat-btn-send" title="ctrl+Enter">发送
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 subjoin-box">
+
+        </div>
+    </div>
+    <div class="shade" v-show="alertBoxParam.isShow">
+        <div class="alert-box" v-show="alertBoxParam.isShow">
+            <div class="alert-box-head">
+                <span class="alert-box-title">{{alertBoxParam.title}}</span>
+                <span class="alert-box-close" @click="alertBoxParam.isShow = false">✕</span>
+            </div>
+            <div class="alert-box-msg">{{alertBoxParam.msg}}</div>
+            <div class="alert-box-foot">
+                <span class="alert-box-btn" @click="alertBoxParam.btnHandleFunc" v-if="alertBoxParam.btnText !== null">{{alertBoxParam.btnText}}</span>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script src="/web/assets/lib/vue-2.6.12/vue.min.js"></script>
+<script src="/web/assets/lib/axios-v0.21.0/axios.min.js"></script>
+<script src="/web/assets/js/util/date.util.js"></script>
+<script src="/web/conf.js"></script>
+<script src="/web/assets/js/profile.js"></script>
+<script src="/web/assets/js/cache.data.js"></script>
+<script>
+    var dateUtil = new DateUtil();
+    var profile = new Profile();
+    var cache = new CacheData();
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            alertBoxParam: {
+                isShow: false,
+                title: '',
+                msg: '',
+                btnText: '',
+                btnHandleFunc: function () {
+                    this.isShow = false
+                }
+            },
+            user: {
+                nickname: '',
+                username: '',
+                avatar: '',
+            },
+            messageList: [],
+            messageListStandby: [],
+            searchData: '',
+            navBtnActive: 1,
+            friendList: [],
+            friendListStandby: [],
+            rightTitle: '',
+            chatList: [],
+            sendChatCont: '',
+            isEmojiShow: false,
+            isUserInfoBoxShow: false,
+            socketConn: null,
+            to_uid: '',
+            to_avatar: '',
+            to_nickname: '',
+        },
+        beforeCreate() {
+            axios.interceptors.response.use(res => {
+                if (res.data.StatusCode === -10) {
+                    alert(res.data.Message)
+                    profile.del()
+                    location.href = 'login.html'
+                }
+                return res
+            })
+        },
+        created() {
+            this.getMessageList()
+            this.getFriendList()
+            var user = profile.getUser()
+            if (user) {
+                this.user = user
+            } else {
+                location.href = 'login.html'
+            }
+        },
+        mounted() {
+            this.wsInit()
+            var _this = this
+            var chatTextarea = document.getElementById('chat-textarea');
+            chatTextarea.onkeydown = function (event) {
+                if (event.key === 'Enter' && event.ctrlKey) {
+                    _this.sendChat()
+                }
+            }
+            var emojiDom = document.getElementsByClassName('emoji');
+            for (var i = 0; i < emojiDom.length; i++) {
+                emojiDom[i].onclick = function () {
+                    _this.sendChatCont = _this.sendChatCont + this.innerHTML;
+                }
+            }
+        },
+        methods: {
+            alertBox(msg, title = null, btnText = null, btnFunc = null) {
+                this.alertBoxParam.isShow = true
+                this.alertBoxParam.title = (title === null) ? '提示' : title
+                this.alertBoxParam.btnText = btnText
+                this.alertBoxParam.msg = msg
+                if (btnFunc !== null) {
+                    this.alertBoxParam.btnHandleFunc = btnFunc
+                }
+            },
+            forBoxSwitch(v) {
+                this.isUserInfoBoxShow = v
+                this.isEmojiShow = v
+            },
+            wsInit() {
+                _this = this
+                if (typeof (WebSocket) === "undefined") {
+                    alert("您的浏览器不支持socket")
+                    return
+                }
+                this.socketConn = new WebSocket(wsDomain + "/ws?token=" + profile.getToken())
+                this.socketConn.onopen = function (evt) {
+                    console.log("socket连接成功")
+                }
+                this.socketConn.onerror = function (evt) {
+                    console.log("socket连接错误")
+                }
+                this.socketConn.onmessage = function (evt) {
+                    console.log(evt.data)
+                    var data = JSON.parse(evt.data)
+                    if (data.sender !== '') {
+                        _this.addChat(data)
+                        var audio = new Audio("/web/assets/music/wt01.mp3")
+                        audio.play()
+                    }
+                }
+            },
+            navTop(tag) {
+                this.searchData = ''
+                this.navBtnActive = tag
+            },
+            getMessageList() {
+                if (sessionStorage.getItem('isLoadMessageData') === '1') {
+                    var list = cache.getMessage()
+                    this.messageList = list
+                    this.messageListStandby = list
+                    return
+                }
+                axios({
+                    url: apiDomain + '/api/messages',
+                    method: 'get',
+                    headers: {
+                        authorization: 'Bearer ' + profile.getToken()
+                    },
+                }).catch(function (err) {
+                    console.log(err)
+                }).then(res => {
+                    var list = []
+                    if (res.data.StatusCode === 0) {
+                        list = res.data.Data.map(v => {
+                            v.time = dateUtil.formatTime(v.time)
+                            v.nickname = v.user.nickname
+                            v.avatar = v.user.avatar
+                            v.msgCount = 0
+                            return v
+                        })
+                        cache.saveMessage(list)
+                    }
+                    this.messageList = list
+                    this.messageListStandby = list
+                    sessionStorage.setItem('isLoadMessageData', '1')
+                })
+            },
+            getFriendList() {
+                if (sessionStorage.getItem('isLoadFriendData') === '1') {
+                    var list = cache.getFriend()
+                    this.friendList = list
+                    this.friendListStandby = list
+                    return
+                }
+                axios({
+                    url: apiDomain + '/api/friends',
+                    method: 'get',
+                    headers: {
+                        authorization: 'Bearer ' + profile.getToken()
+                    }
+                }).catch(function (err) {
+                    console.log(err)
+                }).then(res => {
+                    var list = []
+                    if (res.data.StatusCode === 0) {
+                        list = res.data.Data.map(v => {
+                            v.uid = v.id
+                            return v
+                        })
+                        cache.saveFriend(list)
+                    }
+                    this.friendList = list
+                    this.friendListStandby = list
+                    sessionStorage.setItem('isLoadFriendData', '1')
+                })
+            },
+            searchList() {
+                var originList = (this.navBtnActive === 1) ? this.messageListStandby : this.friendListStandby
+                value = this.searchData
+                var list = []
+                originList.filter(item => {
+                    if (item.nickname.indexOf(value) > -1) {
+                        list.push(item)
+                    }
+                })
+                if (this.navBtnActive === 1) {
+                    this.messageList = list
+                } else if (this.navBtnActive === 2) {
+                    this.friendList = list
+                }
+            },
+            nextFun(value) {
+                this.to_uid = value.uid + ''
+                this.to_avatar = value.avatar
+                this.to_nickname = value.nickname
+                this.rightTitle = value.nickname
+                this.getChatList(value.uid)
+                this.scrollBottom()
+                this.removeMsgCount()
+            },
+            scrollBottom() {
+                this.$nextTick(() => {
+                    var div = document.getElementsByClassName('chat-list')[0]
+                    div.scrollTop = div.scrollHeight
+                })
+            },
+            removeMsgCount() {
+                var list = this.messageList
+                for (i in list) {
+                    if (list[i].uid.toString() === this.to_uid) {
+                        list[i].msgCount = 0
+                    }
+                }
+                this.messageList = list
+                this.messageListStandby = list
+                cache.saveMessage(list)
+
+            },
+            getServerChatList(fid, uid) {
+                var list = []
+                var cacheKey = uid + '_' + fid
+                if (cache.isChat(cacheKey)) {
+                    list = cache.getChat(cacheKey)
+                    return list
+                } else {
+                    axios({
+                        url: apiDomain + '/api/chats/' + fid,
+                        method: 'get',
+                        headers: {
+                            authorization: 'Bearer ' + profile.getToken()
+                        },
+                    }).catch(function (err) {
+                        console.log(err)
+                    }).then(res => {
+                        if (res.data.StatusCode === 0) {
+                            list = res.data.Data.map(v => {
+                                v.msgContent = v.content
+                                v.avatar = v.user.avatar
+                                return v
+                            })
+                        }
+                        list.reverse()
+                        cache.saveChat(cacheKey, list)
+                    })
+                }
+                return cache.getChat(cacheKey)
+            },
+            getChatList(fid) {
+                this.chatList = this.getServerChatList(fid, this.user.id)
+            },
+            addChat(data) {
+                if (data.sender === '') return
+                //添加到聊天对应的内容列表
+                let isChat = 0
+                if (cache.isChat(this.sender + '_' + data.recipient)){
+                    isChat = 1
+                }
+                let chatList = this.getServerChatList(data.sender, data.recipient)
+                if (isChat === 0){
+                    chatList.push({
+                        avatar: data.subjoin.avatar,
+                        msgContent: data.content,
+                        create_time: data.time,
+                        type: 2,
+                    })
+                }
+                cache.saveChat(this.user.id + '_' + data.sender, chatList)
+
+                if (data.sender === this.to_uid) {
+                    this.chatList.push({
+                        avatar: this.to_avatar,
+                        msgContent: data.content,
+                        type: 2
+                    })
+                    this.scrollBottom()
+                    this.updateMessageList(data.content)
+                } else {
+                    var list = this.messageList
+                    var tempItem = null
+                    for (var i = 0; i < list.length; i++) {
+                        if (list[i].uid.toString() === data.sender) {
+                            list[i].msgCount += 1
+                            list[i].message = data.content
+                            list[i].time = dateUtil.formatTime(data.time * 1)
+                            tempItem = list[i]
+                            list.splice(i, 1)
+                            break
+                        } else {
+                            tempItem = {
+                                uid: data.sender * 1,
+                                avatar: data.subjoin.avatar,
+                                nickname: data.subjoin.nickname,
+                                msgCount: 1,
+                                message: data.content,
+                                time: dateUtil.formatTime(data.time * 1)
+                            }
+                        }
+                    }
+                    if (tempItem !== null) {
+                        list.unshift(tempItem)
+                    }
+                    this.messageList = list
+                    this.messageListStandby = list
+                    cache.saveMessage(list)
+                }
+            },
+            sendChat() {
+                if (!this.to_uid) {
+                    this.alertBox('请选择聊天对象', '温馨提示', null, null)
+                    return
+                }
+                if (!this.sendChatCont) {
+                    this.alertBox('请输入聊天内容', '温馨提示', null, null)
+                    return
+                }
+                var json = {
+                    "sender": "",
+                    "recipient": this.to_uid,
+                    "content": this.sendChatCont,
+                    "subjoin": {
+                        "avatar": this.to_avatar,
+                        "nickname": this.to_nickname,
+                    }
+                }
+                var jsonStr = JSON.stringify(json)
+                this.sendSocket(jsonStr)
+
+                this.chatList.push({
+                    avatar: this.user.avatar,
+                    msgContent: this.sendChatCont,
+                    type: 1
+                })
+                this.scrollBottom()
+                this.updateMessageList(this.sendChatCont)
+                this.sendChatCont = ''
+                //添加到聊天对应的内容列表
+                cache.saveChat(this.user.id + '_' + this.to_uid, this.chatList)
+            },
+            sendSocket(str) {
+                if (this.socketConn.readyState !== this.socketConn.OPEN) {
+                    console.log('socket连接已经中断')
+                    this.wsInit()
+                }
+                this.socketConn.send(str)
+            },
+            updateMessageList(msgContent) {
+                var list = this.messageList
+                var tempItem = null
+                for (i in list) {
+                    if (list[i].uid.toString() === this.to_uid) {
+                        list[i].message = msgContent
+                        list[i].time = dateUtil.formatTime(Math.round(new Date() / 1000))
+                        tempItem = list[i]
+                        list.splice(i, 1)
+                    } else {
+                        tempItem = {
+                            uid: this.to_uid * 1,
+                            avatar: this.to_avatar,
+                            nickname: this.to_nickname,
+                            msgCount: 0,
+                            message: msgContent,
+                            time: dateUtil.formatTime(Math.round(new Date() / 1000))
+                        }
+                    }
+                }
+                if (tempItem !== null) {
+                    list.unshift(tempItem)
+                }
+                this.messageList = list
+                this.messageListStandby = list
+                cache.saveMessage(list)
+            },
+            cacheChatListAll() {
+                var list = this.messageListStandby
+                for (i in list) {
+                    cache.delChat(this.user.id + '_' + list[i].uid)
+                }
+            },
+            logout() {
+                _this = this
+                this.alertBox('确认退出登录吗？', '退出提示', '确认', function () {
+                    axios({
+                        url: apiDomain + '/api/logout',
+                        method: 'post',
+                        headers: {
+                            authorization: 'Bearer ' + profile.getToken()
+                        },
+                    }).catch(function (err) {
+                        console.log(err)
+                    }).then(res => {
+                        if (res.data.StatusCode === 0) {
+                            profile.del()
+                            this.socketConn.close()
+                            cache.clearMessage()
+                            cache.clearFriend()
+                            sessionStorage.removeItem('isLoadMessageData')
+                            sessionStorage.removeItem('isLoadFriendData')
+                            _this.cacheChatListAll()
+                            location.href = 'login.html'
+                        }
+                    })
+                })
+            },
+        }
+    })
+</script>
+</html>
