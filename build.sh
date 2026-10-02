@@ -6,6 +6,7 @@
 #
 #   mini-im-<os>-<arch>/
 #   ├── mini-im(.exe)   可执行文件（非 Windows 平台带 0755 权限）
+#   ├── start.sh        启动脚本（Windows 为 start.bat，带 0755 权限）
 #   ├── config.yaml     默认配置（数据库 / Redis / 端口，可用 IM_* 环境变量覆盖）
 #   ├── LICENSE
 #   └── web/            前端静态页（后端直接托管，必须与可执行文件放在一起）
@@ -89,11 +90,18 @@ for target in $targets; do
     cp config.yaml LICENSE "$pkg_dir/"
     cp -r web/. "$pkg_dir/web/"
 
+    # 启动脚本：脚本自身会切到所在目录，因此可在任意位置调用
+    if [ "$goos" = windows ]; then
+        cp tools/release/start.bat "$pkg_dir/start.bat"
+    else
+        cp tools/release/start.sh "$pkg_dir/start.sh"
+    fi
+
     if [ "$goos" = windows ]; then
         # zip 不保存可执行位，Windows 也不需要
         (cd "$staging" && zip -qr "$out_dir/$archive_name" "$pkg_name")
     else
-        chmod 0755 "$pkg_dir/$bin_name"
+        chmod 0755 "$pkg_dir/$bin_name" "$pkg_dir/start.sh"
         # 固定 mtime，保证同一份源码重复构建产物一致
         find "$pkg_dir" -exec touch -t 202601010000.00 {} +
         (cd "$staging" && tar -czf "$out_dir/$archive_name" "$pkg_name")
