@@ -1,0 +1,7 @@
+# 仓库内统一存放 LF，避免 Windows 检出时 shell 脚本被换成 CRLF 而无法执行
+* text=auto eol=lf
+
+# 已是二进制的资源不做换行转换
+*.ico binary
+*.png binary
+*.jpg binary
