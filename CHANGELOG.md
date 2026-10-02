@@ -38,7 +38,7 @@
 - HTTP 不设写超时（WebSocket 长连接会被掐断），只设读超时与空闲超时。
 - `bootstrap.min.css` 按页面实际用到的 class 从 121KB 裁剪到约 12KB，裁剪脚本在 `tools/`。
 - `build.sh` 交叉编译 windows / linux / macOS（amd64 / arm64）共 6 个平台的归档（含 `config.yaml` 与 `web/`）并生成 `checksums.txt`；推送 `v*` 标签由 GitHub Actions 自动创建或更新 Release。
-- 项目以 [MIT](LICENSE) 许可开源，版本历史见 [CHANGELOG.md](CHANGELOG.md)。
+- Release 说明取自 `docs/release-notes/<tag>.md`，本文件为中文版本历史。
 
 ### 测试
 
