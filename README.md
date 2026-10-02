@@ -22,6 +22,8 @@ Go + Gin + GORM(PostgreSQL) + Redis 实现的即时通讯 / 客服系统。
 - [Redis key](#redis-key)
 - [设计要点](#设计要点)
 - [部署提示](#部署提示)
+- [更新日志](#更新日志)
+- [许可](#许可)
 
 ---
 
@@ -602,3 +604,13 @@ PostgreSQL 原生支持四字节 UTF-8，直接明文存储。旧 MySQL 实现�
 - 关闭 debug：`IM_RUN_MODE=release`，同时 gorm 日志降为 warn 级别
 - 反向代理需要透传 WebSocket 升级头 `Upgrade` / `Connection`，且不要设置过短的读超时
 - 应用监听 `SIGINT` / `SIGTERM`，退出时等待 10s 让在途请求结束并关闭数据库连接
+
+---
+
+## 更新日志
+
+版本历史见 [CHANGELOG.md](CHANGELOG.md)，遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
+
+## 许可
+
+[MIT](LICENSE) © 2026 kite88
