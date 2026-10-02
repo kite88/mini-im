@@ -23,6 +23,8 @@ The same page adapts responsively to desktop and mobile, with no bundler and no 
 - [Redis keys](#redis-keys)
 - [Design notes](#design-notes)
 - [Deployment notes](#deployment-notes)
+- [Changelog](#changelog)
+- [License](#license)
 
 ---
 
@@ -649,3 +651,14 @@ unescape logic of the old MySQL implementation has been removed entirely.
   short a read timeout
 - The application listens for `SIGINT` / `SIGTERM` and, on shutdown, waits 10s for in-flight requests to finish
   before closing the database connection
+
+---
+
+## Changelog
+
+The version history lives in [CHANGELOG.md](CHANGELOG.md) and follows
+[semantic versioning](https://semver.org/).
+
+## License
+
+[MIT](LICENSE) © 2026 kite88
