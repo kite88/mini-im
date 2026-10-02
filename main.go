@@ -12,6 +12,10 @@ import (
 	"strconv"
 	"syscall"
 	"time"
+	// 内嵌 IANA 时区数据库：CGO_ENABLED=0 交叉编译出的归档，在没装 Go、
+	// 系统也没有 IANA tzdata 的机器上（典型是 Windows）同样能解析配置中的
+	// Asia/Shanghai，否则 pgx 建连时直接报 unknown time zone
+	_ "time/tzdata"
 
 	"github.com/gin-gonic/gin"
 

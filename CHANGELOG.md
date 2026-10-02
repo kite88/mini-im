@@ -38,6 +38,8 @@
 - HTTP 不设写超时（WebSocket 长连接会被掐断），只设读超时与空闲超时。
 - `bootstrap.min.css` 按页面实际用到的 class 从 121KB 裁剪到约 12KB，裁剪脚本在 `tools/`。
 - `build.sh` 交叉编译 windows / linux / macOS（amd64 / arm64）共 6 个平台的归档（含 `config.yaml`、`web/` 与 `start.sh` / `start.bat` 启动脚本）并生成 `checksums.txt`；推送 `v*` 标签由 GitHub Actions 自动创建或更新 Release。
+- Windows 启动脚本 `start.bat` 在进程退出后保留窗口并显示退出码与常见失败原因，不会闪退；脚本自身保持纯 ASCII，避免 `chcp 65001` 下 cmd 解析多字节字符出错。
+- 入口包内嵌 IANA 时区数据库（`_ "time/tzdata"`）：没装 Go、系统也没有 tzdata 的机器（典型是 Windows）同样能解析 `timezone: Asia/Shanghai`，否则 pgx 建连时直接报 `unknown time zone`。
 - Release 说明取自 `docs/release-notes/<tag>.md`，本文件为中文版本历史。
 
 ### 测试
