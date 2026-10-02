@@ -1,6 +1,11 @@
-body{
-    background-color: #f5f5f5;
+body {
+    background:
+            radial-gradient(1000px 500px at 15% 0%, rgba(78, 140, 255, .18), transparent 60%),
+            radial-gradient(800px 400px at 100% 100%, rgba(78, 140, 255, .12), transparent 60%),
+            var(--bg-body);
+    color: var(--text-1);
 }
+
 .login-box {
     position: absolute;
     margin: auto;
@@ -8,37 +13,180 @@ body{
     left: 0;
     right: 0;
     bottom: 0;
-    border: 1px solid #f5f5f5;
+    height: 420px;
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* 注册模式字段更多，卡片加高避免内容贴边（窄屏在媒体查询中改为高度自适应） */
+.login-box.is-register {
+    height: 500px;
+}
+
+.login-box h1 {
+    text-align: center;
+    font-size: 1.857rem;
+    font-weight: var(--fw-bold);
+    letter-spacing: .5px;
+    margin-bottom: 30px;
+}
+
+.login-box h1::before {
+    content: "";
+    display: inline-block;
+    width: 26px;
+    height: 26px;
+    background: url("/web/assets/image/logo.svg") no-repeat center / contain;
+    margin-right: 10px;
+    vertical-align: -6px;
 }
 
 .login-box form {
-    padding-top: 100px;
+    padding-top: 0;
     padding-left: 25px;
     padding-right: 25px;
-    border-radius: 5px;
+}
+
+.login-box .form-control {
+    background-color: var(--bg-panel-2);
+    border: 1px solid var(--border);
+    color: var(--text-1);
+    border-radius: 8px;
+    height: 36px;
+    box-shadow: none;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+.login-box .form-control::placeholder {
+    color: var(--text-2);
+}
+
+.login-box .form-control:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(78, 140, 255, .15);
+}
+
+.login-box .control-label {
+    color: var(--text-1);
+    font-weight: var(--fw-medium);
+}
+
+.login-box .checkbox label {
+    color: var(--text-2);
+}
+
+/* 设置齿轮按钮：卡片右上角 */
+.login-box .settings-wrap {
+    position: absolute;
+    top: 14px;
+    right: 14px;
 }
 
 .clear-password {
     text-decoration: none;
-    font-size: 10px;
+    font-size: 0.714rem;
     margin: 10px;
+    color: var(--accent);
 }
 
-.clear-password:link {
-    text-decoration: none; /* 指正常的未被访问过的链接*/
-
-}
-
-.clear-password:visited {
-    text-decoration: none; /*指已经访问过的链接*/
-
-}
-
-.clear-password:hover {
-    text-decoration: none; /*指鼠标在链接*/
-}
-
+.clear-password:link,
+.clear-password:visited,
+.clear-password:hover,
 .clear-password:active {
-    text-decoration: none; /* 指正在点的链接*/
+    text-decoration: none;
 }
 
+.login-btn {
+    width: 100%;
+    height: 36px;
+    font-size: 1rem;
+    color: #ffffff;
+    background: linear-gradient(135deg, var(--accent), #3a7bf0);
+    border: 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(78, 140, 255, .35);
+    transition: filter .2s, transform .15s;
+}
+
+.login-btn:hover {
+    filter: brightness(1.08);
+}
+
+.login-btn:active {
+    transform: scale(.97);
+}
+
+.login-box .login-btn[disabled] {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+/* 登录 / 注册表单切换链接 */
+.auth-switch {
+    text-align: center;
+    font-size: 0.857rem;
+    color: var(--text-2);
+}
+
+.auth-switch a {
+    color: var(--accent);
+    text-decoration: none;
+    margin-left: 4px;
+}
+
+.auth-switch a:hover {
+    text-decoration: underline;
+}
+
+/* ========== 窄屏适配 ========== */
+/* ≥768px：固定卡片宽度，label / 输入框按 23% / 72% 分栏（label 右对齐）。
+   宽度以「注册页用户名的规则占位符（约 240px）能完整显示」为准，
+   同时保证「确认密码」这类 4 字 label 不被裁切 */
+@media (min-width: 768px) {
+    .login-box.col-md-3 {
+        width: 460px;
+    }
+
+    .login-box .form-horizontal .col-sm-2.control-label {
+        width: 23%;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .login-box .form-horizontal .col-sm-10 {
+        width: 72%;
+    }
+
+    /* 勾选 / 按钮所在行的左偏移对齐到 label 分栏（Bootstrap 默认 16.67%，
+       不改的话按钮会比输入框往左凸出一截） */
+    .login-box .form-horizontal .col-sm-offset-2 {
+        margin-left: 23%;
+    }
+}
+
+/* <768px：卡片占满宽度（留边距），Bootstrap 已自动上下堆叠 label 与输入框 */
+@media (max-width: 767px) {
+    /* label 与输入框上下堆叠后内容变高：改为高度自适应并垂直居中，避免注册表单被固定高度裁剪 */
+    .login-box.col-md-3 {
+        left: 12px;
+        right: 12px;
+        width: auto;
+        top: 50%;
+        bottom: auto;
+        height: auto;
+        min-height: 0;
+        max-height: calc(100vh - 24px);
+        transform: translateY(-50%);
+        overflow-y: auto;
+    }
+
+    .login-box .form-horizontal .control-label {
+        text-align: left;
+        white-space: nowrap;
+    }
+}

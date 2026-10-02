@@ -1,28 +1,35 @@
-body {
+/* ========== 主题变量统一在 common.css 中定义（两个页面都会加载） ========== */
+
+:root {
     --Height: 650px;
     --ListHeight: 600px;
-    --ChatListHeight: 450px;
-    --HoverColor: #d6d6d6;
 }
 
-/* 设置滚动条的样式 */
+html {
+    transition: background-color .25s ease;
+}
+
+body {
+    background-color: var(--bg-body);
+    color: var(--text-1);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+/* ========== 滚动条 ========== */
 ::-webkit-scrollbar {
-    width: 3px;
+    width: 5px;
 }
 
-/* 滚动槽 */
 ::-webkit-scrollbar-track {
-    -webkit-box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.3);
-    border-radius: 5px;
+    background: transparent;
 }
 
-/* 滚动条滑块 */
 ::-webkit-scrollbar-thumb {
     border-radius: 5px;
-    background: rgba(0, 0, 0, 0.8);
-    -webkit-box-shadow: inset 0 0 3px RGB(243, 243, 244);
+    background: var(--scroll-thumb);
 }
 
+/* ========== 通用 ========== */
 .float-left {
     float: left;
 }
@@ -42,16 +49,40 @@ ul {
     padding-right: 0;
 }
 
-.cont-box {
-    height: var(--Height);
-    border-top: 1px solid #c0c0c0;
-    border-bottom: 1px solid #c0c0c0;
-    border-right: 1px solid #c0c0c0;
+/* 页面顶部：标题在左，主题 / 语言切换器在右上角 */
+.page-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
-.subjoin-box {
+.page-head h1 {
+    font-size: 1.857rem;
+    font-weight: var(--fw-bold);
+    letter-spacing: .5px;
+    margin: 18px 0 14px;
+    color: var(--text-1);
+}
+
+.page-head h1::before {
+    content: "";
+    display: inline-block;
+    width: 26px;
+    height: 26px;
+    background: url("/web/assets/image/logo.svg") no-repeat center / contain;
+    margin-right: 10px;
+    vertical-align: -6px;
+}
+
+.cont-box {
+    /* 设置抽屉以容器为定位基准（贴容器右侧而非屏幕右侧） */
+    position: relative;
     height: var(--Height);
-    border-left: 1px solid #c0c0c0;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    background-color: var(--bg-panel);
 }
 
 .left-box {
@@ -60,13 +91,25 @@ ul {
 }
 
 .right-box {
-    min-height: var(--Height);
+    height: var(--Height);
     padding-right: 0;
+    background-color: var(--bg-panel);
+    display: flex;
+    flex-direction: column;
 }
 
+.right-box .right-box-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ========== 左侧导航 ========== */
 .left-nav {
+    position: relative;
     height: var(--Height);
-    background-color: #5e5e5e;
+    background: linear-gradient(180deg, var(--bg-nav-top), var(--bg-nav-bottom));
     padding-right: 10px;
     padding-left: 10px;
 }
@@ -75,26 +118,36 @@ ul {
     height: var(--Height);
     padding-left: 0;
     padding-right: 0;
+    background-color: var(--bg-panel);
 }
 
 .search-box {
-    margin-top: 10px;
-    margin-bottom: 10px;
-    margin-left: 10px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+    margin-left: 12px;
+    margin-right: 12px;
 }
 
 .search-box .search-input {
     width: 100%;
-    height: 25px;
-    border: 0;
-    border-radius: 2px;
-    -moz-border-radius: 2px;
-    -webkit-border-radius: 2px;
-    background-color: #d6d6d6;
-    color: #333;
-    padding-left: 20px;
-    font-size: 12px;
+    height: 30px;
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    background-color: var(--bg-panel-2);
+    color: var(--text-1);
+    padding-left: 14px;
+    font-size: 0.857rem;
     outline: none;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+.search-box .search-input::placeholder {
+    color: var(--text-2);
+}
+
+.search-box .search-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(78, 140, 255, .15);
 }
 
 .left-list {
@@ -104,7 +157,7 @@ ul {
 }
 
 .left-nav ul li {
-    font-size: 18px;
+    font-size: 1.286rem;
     margin-top: 15px;
     margin-bottom: 15px;
     text-align: center;
@@ -112,19 +165,26 @@ ul {
 }
 
 .nav-btn {
-    color: #dcdcdc;
+    color: rgba(255, 255, 255, .55);
+    transition: color .2s, transform .2s;
 }
 
 .nav-btn:hover {
     color: #ffffff;
+    transform: scale(1.1);
 }
 
-.nav-btn-active {
-    color: #67b168;
-}
-
+.nav-btn-active,
 .nav-btn-active:hover {
-    color: #67b168;
+    color: var(--accent);
+}
+
+/* 导航图标：内联 SVG，尺寸跟随字号、颜色继承 .nav-btn */
+.nav-icon svg {
+    width: 1em;
+    height: 1em;
+    fill: currentColor;
+    vertical-align: -0.12em;
 }
 
 .left-nav ul .avatar-li {
@@ -133,10 +193,17 @@ ul {
 
 .left-nav ul li .avatar {
     width: 100%;
-    max-width: 100px;
+    max-width: 60px;
     height: auto;
 }
 
+.left-nav ul li .avatar img {
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, .25);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+}
+
+/* ========== 会话 / 好友列表 ========== */
 .left-list .message-list {
     width: 100%;
     margin: 0 auto;
@@ -147,15 +214,18 @@ ul {
     padding-left: 10px;
     padding-top: 10px;
     cursor: default;
+    transition: background-color .15s;
 }
 
 .left-list .message-list li:hover {
-    background-color: var(--HoverColor);
+    background-color: var(--hover);
 }
 
 .avatar > img {
     width: 35px;
     height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
 .left-list .message-list li .info {
@@ -164,8 +234,9 @@ ul {
 }
 
 .left-list .message-list li .nickname {
-    font-size: 12px;
-    font-weight: bold;
+    font-size: 0.929rem;
+    font-weight: var(--fw-bold);
+    color: var(--text-1);
     width: 80%;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -175,16 +246,16 @@ ul {
 }
 
 .left-list .message-list li .time {
-    font-size: 12px;
-    color: #888888;
+    font-size: 0.857rem;
+    color: var(--text-2);
     display: inline-block;
     width: 20%;
     text-align: right;
 }
 
 .left-list .message-list li .msg-content {
-    font-size: 12px;
-    color: #888888;
+    font-size: 0.857rem;
+    color: var(--text-2);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -202,15 +273,16 @@ ul {
     padding-left: 10px;
     padding-top: 10px;
     cursor: default;
+    transition: background-color .15s;
 }
 
 .left-list .friend-list li .nickname {
-    font-size: 12px;
-    color: #0f0f0f;
+    font-size: 0.929rem;
+    color: var(--text-1);
     margin-left: 35px;
     margin-right: 10px;
     text-align: left;
-    font-weight: 600;
+    font-weight: var(--fw-medium);
     text-indent: 1em;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -220,25 +292,106 @@ ul {
 }
 
 .left-list .friend-list li:hover {
-    background-color: var(--HoverColor);
+    background-color: var(--hover);
 }
 
+/* 当前选中的会话 / 好友 */
+.left-list .message-list li.active,
+.left-list .friend-list li.active,
+.left-list .message-list li.active:hover,
+.left-list .friend-list li.active:hover {
+    background-color: var(--item-active);
+    box-shadow: inset 3px 0 0 var(--accent);
+}
+
+/* 空列表占位 */
+.left-list .message-list .list-empty,
+.left-list .friend-list .list-empty {
+    height: auto;
+    padding: 24px 10px;
+    text-align: center;
+    font-size: 0.857rem;
+    color: var(--text-2);
+    cursor: default;
+}
+
+.left-list .message-list .list-empty:hover,
+.left-list .friend-list .list-empty:hover {
+    background-color: transparent;
+}
+
+/* 好友列表右侧的「拉黑」按钮：桌面端悬停出现，避免列表过于嘈杂 */
+.left-list .friend-list li .friend-action {
+    float: right;
+    margin: 12px 10px 0 0;
+    padding: 0 8px;
+    font-size: 0.857rem;
+    line-height: 20px;
+    color: var(--text-2);
+    background-color: var(--bg-panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    outline: none;
+    opacity: 0;
+    transition: opacity .15s, color .15s, background-color .15s, border-color .15s;
+}
+
+.left-list .friend-list li:hover .friend-action {
+    opacity: 1;
+}
+
+.left-list .friend-list li .friend-action:hover {
+    color: #ffffff;
+    background-color: var(--danger);
+    border-color: var(--danger);
+}
+
+/* 删除好友：常显为警示色，与「拉黑」区分开 */
+.left-list .friend-list li .friend-action-danger {
+    color: var(--danger);
+}
+
+/* 已拉黑的好友：列表项右侧常显标记，取代「拉黑」按钮 */
+.left-list .friend-list li .friend-blocked-tag {
+    float: right;
+    margin: 12px 10px 0 0;
+    font-size: 0.857rem;
+    line-height: 20px;
+    color: var(--text-2);
+}
+
+/* 手机端没有悬停：拉黑按钮常显，保证能点中 */
+@media (max-width: 991px) {
+    .left-list .friend-list li .friend-action {
+        opacity: 1;
+    }
+}
+
+/* ========== 右侧聊天区 ========== */
 .right-box .right-box-top {
+    flex: none;
     height: 50px;
     line-height: 50px;
-    font-weight: bold;
+    font-weight: var(--fw-bold);
+    color: var(--text-1);
+    padding-left: 15px;
+    border-bottom: 1px solid var(--border);
+    background-color: var(--bg-panel);
 }
 
 .chat-list {
-    height: var(--ChatListHeight);
+    flex: 1 1 0;
+    min-height: 0;
     overflow-x: hidden;
     overflow-y: auto !important;
     padding-right: 15px;
-    border-bottom: 1px solid #d6d6d6;
+    padding-left: 15px;
+    border-bottom: 1px solid var(--border);
 }
 
 .chat-list li {
-    margin: 10px 0;
+    margin: 12px 0;
     width: 100%;
     height: auto;
     display: inline-block;
@@ -248,21 +401,24 @@ ul {
     word-wrap: break-word;
     word-break: normal;
     max-width: 70%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
 }
 
 .chat-list .message-txt-l {
     line-height: 35px;
-    padding: 0 10px;
-    background-color: #794928;
-    border-radius: 5px;
-    color: #ffffff;
+    padding: 0 12px;
+    background-color: var(--bubble-other-bg);
+    border-radius: 8px;
+    border-top-left-radius: 2px;
+    color: var(--bubble-other-text);
 }
 
 .chat-list .message-txt-r {
     line-height: 35px;
-    padding: 0 10px;
-    background-color: #5bc0de;
-    border-radius: 5px;
+    padding: 0 12px;
+    background-color: var(--bubble-self);
+    border-radius: 8px;
+    border-top-right-radius: 2px;
     color: #ffffff;
 }
 
@@ -271,8 +427,8 @@ ul {
     height: 0;
     border-top: 5px solid transparent;
     border-bottom: 5px solid transparent;
-    border-right: 6px solid #794928;
-    margin: 13px 0 13px 15px;
+    border-right: 6px solid var(--bubble-other-bg);
+    margin: 13px 6px 13px 15px;
 }
 
 .triangle-right {
@@ -280,8 +436,30 @@ ul {
     height: 0;
     border-top: 5px solid transparent;
     border-bottom: 5px solid transparent;
-    border-left: 6px solid #5bc0de;
-    margin: 13px 15px 13px 0;
+    border-left: 6px solid var(--bubble-self);
+    margin: 13px 6px 13px 0;
+}
+
+/* ========== 输入区 ========== */
+/* 输入区整体：区别于聊天区的底色 + 明显边框，聚焦时高亮 */
+.chat-edit {
+    flex: none; /* 高度固定，不被聊天列表挤压 */
+    margin: 8px 12px 10px;
+    background-color: var(--bg-panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    /* 不能加 overflow:hidden —— 会裁掉锚定在输入框上方的表情面板 */
+    transition: border-color .2s, box-shadow .2s;
+}
+
+.chat-edit:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(78, 140, 255, .12);
+}
+
+.chat-edit .chat-edit-foot {
+    padding: 2px 0 8px;
+    overflow: hidden;
 }
 
 .chat-edit .chat-edit-head {
@@ -290,16 +468,27 @@ ul {
 
 .chat-edit .chat-edit-head .emoji-box {
     position: absolute;
-    top: -255px;
+    top: auto;
+    bottom: calc(100% + 8px);
     margin: 0 5px 5px 0;
-    border: 1px solid #d6d6d6;
-    background-color: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background-color: var(--bg-panel);
+    box-shadow: var(--shadow);
+    z-index: 5;
 }
 
 .emoji-box .emoji {
-    font-size: 20px;
+    font-size: 1.429rem;
     text-decoration: none;
     cursor: pointer;
+    border-radius: 4px;
+    transition: transform .15s, background-color .15s;
+}
+
+.emoji-box .emoji:hover {
+    transform: scale(1.2);
+    background-color: var(--hover);
 }
 
 .emoji-box .emoji-image img {
@@ -316,16 +505,31 @@ ul {
 
 .chat-edit .chat-edit-head .chat-edit-head-btn {
     cursor: pointer;
+    margin-left: 8px;
+    display: inline-block;
+    border-radius: 4px;
+    transition: transform .15s;
 }
 
-.chat-edit .chat-edit-head .chat-edit-head-btn img {
+.chat-edit .chat-edit-head .chat-edit-head-btn:hover {
+    transform: scale(1.1);
+}
+
+.chat-edit .chat-edit-head .chat-edit-head-btn svg {
     width: 20px;
     height: 20px;
+    display: block;
+    color: var(--text-1);
+}
+
+.chat-edit .chat-edit-head .chat-edit-head-btn:hover svg {
+    color: var(--primary, #409eff);
 }
 
 .chat-edit .chat-edit-cont textarea {
     width: 100%;
-    background-color: #fff;
+    background-color: transparent;
+    color: var(--text-1);
     border: 0;
     outline: none;
     white-space: pre-wrap;
@@ -333,67 +537,386 @@ ul {
     margin: 0;
     height: 5em;
     resize: none;
-    font-size: 15px;
+    font-size: 1.071rem;
 }
 
+/* 尺寸见文件末尾「统一按钮尺寸」，这里只管外观与布局 */
 .chat-edit .chat-edit-foot .chat-btn-send {
     float: right;
-    height: 2em;
-    width: 4em;
-    margin-right: 15px;
-    font-size: 12px;
+    margin: 0 12px 4px 0;
+    background: linear-gradient(135deg, var(--accent), #3a7bf0);
+    /* 与其它 .btn 保持同样的 1px 边框（透明）：按钮宽度由「内容 + 内边距 + 边框」决定，
+       少了这 1px 边框会让它比「同意 / 拒绝」窄 2px */
+    border: 1px solid transparent;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(78, 140, 255, .35);
+    transition: filter .2s, transform .15s;
 }
 
+.chat-edit .chat-edit-foot .chat-btn-send:hover {
+    filter: brightness(1.08);
+}
+
+.chat-edit .chat-edit-foot .chat-btn-send:active {
+    transform: scale(.96);
+}
+
+/* ========== 用户信息卡片 ========== */
+/* 结构：上面一行是「头像 + 昵称 / 账号」，退出按钮通栏放在底部 */
 .user-info-box {
-    width: 200px;
-    height: 150px;
-    background-color: #ffffff;
     position: absolute;
     left: 30px;
     top: 30px;
     z-index: 100;
-    box-shadow: 3px 3px 3px #888888;
-    padding: 10px;
+    width: 260px;
+    /* 窄屏兜底：不论左侧留了多少位置，卡片都不超出可视宽度 */
+    max-width: calc(100vw - 48px);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
 }
 
-.user-info-box .user-info-nickname-account {
-    float: left;
-    width: 140px;
-    padding-left: 10px;
-}
-
-.user-info-box .user-info-nickname-account .user-info-nickname {
-    font-weight: bold;
-    height: 20px;
-}
-
-.user-info-box .user-info-nickname-account .user-info-account {
-    height: 20px;
-    color: #7a7a7a;
-    font-size: 12px;
+/* 头像与资料同一行；资料占满剩余宽度，过长时省略号截断（不再被挤到下一行） */
+.user-info-box .user-info-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
 }
 
 .user-info-box .user-info-avatar {
-    width: 40px;
-    height: 40px;
-    float: left;
+    flex: none;
+    width: 44px;
+    height: 44px;
 }
 
 .user-info-box .user-info-avatar img {
     width: 100%;
     height: 100%;
+    border-radius: 50%;
 }
 
-.user-info-box .user-info-logout {
-    position: absolute;
-    bottom: 10px;
+.user-info-box .user-info-nickname-account {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.user-info-box .user-info-nickname {
+    font-size: 1rem;
+    font-weight: var(--fw-medium);
+    color: var(--text-1);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-info-box .user-info-account {
+    margin-top: 2px;
+    color: var(--text-2);
+    font-size: 0.857rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .user-info-box .user-info-logout button {
-    width: 180px;
+    width: 100%;
     outline: none !important;
+    background-color: var(--danger);
+    border: 0;
+    color: #ffffff;
+    border-radius: 6px;
+    transition: filter .2s;
 }
 
+.user-info-box .user-info-logout button:hover {
+    filter: brightness(1.08);
+}
+
+/* ========== 返回按钮（仅移动端显示） ========== */
+.mobile-back {
+    display: none;
+}
+
+/* ========== 移动端 / 小平板适配（≤991px，桌面端不受影响） ========== */
+@media (max-width: 991px) {
+    html,
+    body {
+        height: 100%;
+        overflow: hidden; /* 锁死文档滚动，避免 iOS 键盘弹出时整页被顶走 */
+    }
+
+    body {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* 整页改为纵向 flex 布局，撑满视口，替代 650px 固定高度；
+       用 100vh + 100svh 而非 dvh：iOS 键盘不改变布局视口，键盘避让交给 JS 补 padding-bottom */
+    .container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        height: 100svh;
+        padding-left: 10px;
+        padding-right: 10px;
+        box-sizing: border-box;
+    }
+
+    .page-head {
+        flex: none;
+    }
+
+    .page-head h1 {
+        font-size: 1.429rem;
+        margin: 10px 0 8px;
+    }
+
+    .page-head h1::before {
+        width: 20px;
+        height: 20px;
+        margin-right: 6px;
+        vertical-align: -5px;
+    }
+
+    .cont-box {
+        position: relative;
+        flex: 1 1 auto;
+        min-height: 0;
+        height: auto;
+    }
+
+    /* ---- 左侧：导航栏 + 会话/好友列表，占满整屏 ---- */
+    .left-box {
+        display: flex;
+        width: 100%;
+        height: 100%;
+    }
+
+    .left-nav {
+        flex: none;
+        width: 56px;
+        height: 100%;
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+
+    .left-list-box {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: auto;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .search-box {
+        flex: none;
+        margin: 8px 10px;
+    }
+
+    .search-box .search-input {
+        height: 34px;
+        font-size: 1rem;
+    }
+
+    .left-list {
+        flex: 1 1 auto;
+        min-height: 0;
+        height: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .left-list .message-list li,
+    .left-list .friend-list li {
+        height: 60px;
+    }
+
+    .left-nav ul li {
+        font-size: 1.429rem;
+    }
+
+    .left-nav ul li .avatar {
+        max-width: 36px;
+    }
+
+    /* ---- 右侧：全屏聊天视图，默认隐藏，选中会话后滑入 ---- */
+    .right-box {
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 20;
+        width: 100%;
+        /* 必须显式复位桌面端的固定高度（--Height），否则 top/bottom 同时生效时
+           bottom 会被忽略，聊天视图只占 650px，底部露出左侧导航栏 */
+        height: auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        transform: translateX(100%);
+        visibility: hidden;
+        transition: transform .25s ease, visibility .25s;
+    }
+
+    #app.app-mobile-chat .right-box {
+        transform: translateX(0);
+        visibility: visible;
+    }
+
+    .right-box .right-box-top {
+        flex: none;
+        display: flex;
+        align-items: center;
+        height: 48px;
+        line-height: normal;
+        padding-left: 5px;
+        padding-right: 15px;
+    }
+
+    .right-box .right-box-title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .mobile-back {
+        display: inline-block;
+        flex: none;
+        width: 36px;
+        height: 36px;
+        line-height: 32px;
+        font-size: 1.857rem;
+        text-align: center;
+        color: var(--text-1);
+        cursor: pointer;
+        user-select: none;
+        border-radius: 8px;
+        transition: background-color .15s;
+    }
+
+    .mobile-back:active {
+        background-color: var(--hover);
+    }
+
+    .right-box-content {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chat-list {
+        flex: 1 1 0;
+        min-height: 0;
+        height: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* ---- 输入区：微信风格单行输入条（表情 | 输入框 | 发送） ---- */
+    .chat-edit {
+        position: relative; /* 作为表情面板的定位参照 */
+        flex: none;
+        display: flex;
+        flex-direction: row;
+        align-items: flex-end;
+        gap: 8px;
+        margin: 6px 8px 8px;
+        padding: 7px 8px;
+        border-radius: 12px;
+    }
+
+    .chat-edit .chat-edit-head {
+        position: static;
+        flex: none;
+        align-self: center;
+    }
+
+    .chat-edit .chat-edit-head .chat-edit-btn-box {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding-top: 0;
+        height: auto;
+    }
+
+    .chat-edit .chat-edit-head .chat-edit-head-btn {
+        margin-left: 0;
+        padding: 4px;
+    }
+
+    .chat-edit .chat-edit-head .chat-edit-head-btn svg {
+        width: 24px;
+        height: 24px;
+        color: var(--text-2);
+    }
+
+    .chat-edit .chat-edit-cont {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .chat-edit .chat-edit-cont textarea {
+        font-size: 1.143rem; /* ≥16px，避免 iOS 聚焦时页面缩放 */
+        height: 38px;
+        line-height: 22px;
+        padding: 8px 10px;
+        box-sizing: border-box;
+        background-color: var(--bg-panel);
+        border-radius: 8px;
+    }
+
+    .chat-edit .chat-edit-foot {
+        flex: none;
+        padding: 0;
+        overflow: visible;
+    }
+
+    /* 尺寸由文末「统一按钮尺寸」统一控制，这里只解除浮动 */
+    .chat-edit .chat-edit-foot .chat-btn-send {
+        float: none;
+        margin: 0;
+    }
+
+    /* 表情面板：以输入条为参照，锚定在其上方并限制高度 */
+    .chat-edit .chat-edit-head .emoji-box {
+        position: absolute;
+        top: auto;
+        bottom: calc(100% + 8px);
+        left: 0;
+        right: 0;
+        margin: 0;
+        max-height: 45vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        z-index: 30;
+    }
+
+    .emoji-box .emoji {
+        font-size: 1.714rem;
+    }
+
+    .emoji-box .emoji-image img {
+        width: 64px;
+        height: 64px;
+    }
+
+    /* 用户信息卡片位置微调，防止贴边溢出 */
+    .user-info-box {
+        left: 64px;
+        top: 8px;
+        width: 220px;
+        max-width: calc(100vw - 80px);
+    }
+
+}
+
+/* ========== 未读消息角标 ========== */
 .msg-count-box {
     position: relative;
 }
@@ -405,12 +928,410 @@ ul {
     display: inline-block;
     min-width: 15px;
     height: 15px;
-    font-size: 10px;
+    font-size: 0.714rem;
     line-height: 15px;
-    background-color: rgba(255, 0, 0, .8);
+    background-color: var(--danger);
     color: #fff;
-    border-radius: 50%;
+    border-radius: 8px;
+    padding: 0 3px;
     text-align: center;
     white-space: nowrap;
     vertical-align: middle;
+}
+
+/* ========== 加好友 ========== */
+/* 导航「新的朋友」角标：锚定在图标右上角 */
+.left-nav .nav-icon {
+    position: relative;
+    display: inline-block;
+}
+
+.nav-badge {
+    position: absolute;
+    top: -8px;
+    right: -14px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.714rem;
+    line-height: 1;
+    color: #fff;
+    background-color: var(--danger);
+    border-radius: 8px;
+}
+
+/* 搜索框右侧的「+ / 添加好友」按钮 */
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.search-box label {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+.add-friend-btn {
+    flex: none;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    font-size: 1.286rem;
+    line-height: 1;
+    color: var(--text-2);
+    background-color: var(--bg-panel-2);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    cursor: pointer;
+    outline: none;
+    transition: color .2s, background-color .2s, border-color .2s;
+}
+
+.add-friend-btn:hover {
+    color: #fff;
+    background-color: var(--accent);
+    border-color: var(--accent);
+}
+
+/* 「新的朋友」页没有搜索框，按钮撑满整行 */
+.add-friend-btn-wide {
+    width: 100%;
+    height: 30px;
+    font-size: 0.929rem;
+    border-radius: 15px;
+}
+
+/* 提示框层级高于「添加好友」弹窗，否则提示会弹在弹窗下面点不到按钮 */
+.shade-alert {
+    z-index: 600;
+}
+
+.shade-alert .alert-box {
+    z-index: 610;
+}
+
+/* 添加好友弹窗 */
+.dialog {
+    position: relative;
+    z-index: 510;
+    width: 380px;
+    max-width: 100%;
+    max-height: calc(100vh - 48px);
+    max-height: calc(100dvh - 48px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    animation: alert-box-pop .22s ease;
+}
+
+.dialog .dialog-head {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, var(--bg-nav-top), var(--bg-nav-bottom));
+}
+
+.dialog .dialog-title {
+    font-size: 1rem;
+    font-weight: var(--fw-medium);
+    color: #ffffff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dialog .dialog-close {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.857rem;
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, .18);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color .2s, transform .15s;
+}
+
+.dialog .dialog-close:hover {
+    background-color: var(--danger);
+}
+
+.dialog .dialog-close:active {
+    transform: scale(.9);
+}
+
+.dialog .dialog-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+}
+
+.dialog .dialog-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.dialog .dialog-field .form-control {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 34px;
+    background-color: var(--bg-panel-2);
+    border: 1px solid var(--border);
+    color: var(--text-1);
+    border-radius: 8px;
+    box-shadow: none;
+    font-size: 0.929rem;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+.dialog .dialog-field .form-control::placeholder {
+    color: var(--text-2);
+}
+
+.dialog .dialog-field .form-control:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(78, 140, 255, .15);
+}
+
+/* bootstrap 裁剪后只剩 btn / btn-success / btn-danger / btn-sm / btn-xs，这里补两个中性按钮 */
+.btn-accent,
+.btn-accent:hover,
+.btn-accent:focus {
+    color: #ffffff;
+    background-color: var(--accent);
+    border-color: var(--accent);
+}
+
+.btn-accent:hover,
+.btn-accent:focus {
+    filter: brightness(1.08);
+}
+
+.btn-plain,
+.btn-plain:hover,
+.btn-plain:focus {
+    color: var(--text-1);
+    background-color: var(--bg-panel-2);
+    border-color: var(--border);
+}
+
+.btn-plain:hover,
+.btn-plain:focus {
+    background-color: var(--hover);
+}
+
+/* 搜索结果列表 */
+.user-search-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.user-search-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 2px;
+    border-bottom: 1px solid var(--border);
+}
+
+.user-search-list li:last-child {
+    border-bottom: 0;
+}
+
+.user-search-list .user-meta {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.user-search-list .user-nickname {
+    font-size: 0.929rem;
+    font-weight: var(--fw-medium);
+    color: var(--text-1);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-search-list .user-account {
+    font-size: 0.857rem;
+    color: var(--text-2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-search-list .relation-tag {
+    flex: none;
+    font-size: 0.857rem;
+    color: var(--text-2);
+}
+
+.user-search-list .list-empty {
+    display: block;
+    padding: 20px 8px;
+    text-align: center;
+    font-size: 0.857rem;
+    color: var(--text-2);
+    border-bottom: 0;
+}
+
+/* 左侧「新的朋友」申请列表 */
+.left-list .request-list {
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* 一行 = 头像 + 资料（换行后是操作区），用 flex 自动换行省掉各处 margin 计算 */
+.left-list .request-list li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    cursor: default;
+    border-bottom: 1px solid var(--border);
+    transition: background-color .15s;
+}
+
+.left-list .request-list li:last-child {
+    border-bottom: 0;
+}
+
+.left-list .request-list li:hover {
+    background-color: var(--hover);
+}
+
+.left-list .request-list li .avatar {
+    flex: none;
+}
+
+.left-list .request-list li .avatar img {
+    width: 42px;
+    height: 42px;
+}
+
+.left-list .request-list li .request-info {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.left-list .request-list li .nickname {
+    font-size: 1rem;
+    font-weight: var(--fw-medium);
+    color: var(--text-1);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.left-list .request-list li .request-message {
+    font-size: 0.857rem;
+    color: var(--text-2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 操作区独占一行、右对齐紧凑排列：按钮够大能点中，又不会占满整行 */
+.left-list .request-list li .request-actions {
+    flex: 1 1 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* 尺寸与「发送」按钮统一（见文件末尾），这里只固定不参与伸缩 */
+.left-list .request-list li .request-actions .btn {
+    flex: none;
+}
+
+/* 黑名单页：移出按钮与资料同行（「新的朋友」页需要独占一行，这里不需要） */
+.left-list .blacklist-list li .request-actions {
+    flex: none;
+}
+
+.left-list .request-list li .request-actions .btn:active {
+    transform: scale(.98);
+}
+
+.left-list .request-list .list-empty {
+    height: auto;
+    padding: 24px 10px;
+    text-align: center;
+    font-size: 0.857rem;
+    color: var(--text-2);
+    cursor: default;
+}
+
+.left-list .request-list .list-empty:hover {
+    background-color: transparent;
+}
+
+@media (max-width: 991px) {
+    /* 提示框 / 弹窗保持正常尺寸居中：小屏下也不拉满整屏，
+       窄到放不下时由 max-width: 100% 自动收缩（.shade 自带 16px 内边距） */
+
+    /* 手机端：申请项与按钮进一步放大，保证拇指点击面积 */
+    .left-list .request-list li {
+        gap: 10px;
+        padding: 14px 12px;
+    }
+
+    .left-list .request-list li .avatar img {
+        width: 44px;
+        height: 44px;
+    }
+
+    .left-list .request-list li .nickname {
+        font-size: 1.071rem;
+    }
+
+    .left-list .request-list li .request-message {
+        font-size: 0.929rem;
+    }
+}
+
+/* ========== 统一按钮尺寸（大屏 / 小屏完全一致） ==========
+   发送、同意 / 拒绝、搜索、添加好友这些操作按钮共用同一套尺寸，
+   不再按断点切换，避免同一个按钮在不同屏幕下大小、圆角不一致 */
+.chat-edit .chat-edit-foot .chat-btn-send,
+.left-list .request-list li .request-actions .btn,
+.dialog .dialog-field .btn,
+.add-friend-btn-wide {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    height: 30px;
+    padding: 0 14px;
+    font-size: 1rem;
+    line-height: 1;
+    border-radius: 6px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+/* 「发送」原为定宽 4em，统一后改为按内容宽度（与其它按钮一致） */
+.chat-edit .chat-edit-foot .chat-btn-send {
+    width: auto;
 }

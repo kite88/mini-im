@@ -1,0 +1,41 @@
+# 仅启动依赖组件（PostgreSQL + Redis），应用本身在本地 go run 即可
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: im-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: mini-im
+      TZ: Asia/Shanghai
+    ports:
+      - "5432:5432"
+    volumes:
+      - im-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mini-im"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: im-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - im-redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  im-pgdata:
+  im-redisdata:
