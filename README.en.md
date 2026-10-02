@@ -2,6 +2,9 @@
 
 # mini-im
 
+[![Release](https://img.shields.io/github/v/release/kite88/mini-im)](https://github.com/kite88/mini-im/releases/latest)
+[![License](https://img.shields.io/github/license/kite88/mini-im)](LICENSE)
+
 An instant-messaging / customer-service system built with Go + Gin + GORM (PostgreSQL) + Redis.
 
 The front end is a plain Vue 2 + Axios static page served directly by the backend — no build step.
