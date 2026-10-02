@@ -1,51 +1,150 @@
 <!DOCTYPE html>
-<html lang="zh-cn">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <script>
+        (function () {
+            var t = localStorage.getItem('mini-im-theme') || 'system'
+            var d = t === 'dark' || (t === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+            document.documentElement.setAttribute('data-theme', d ? 'dark' : 'light')
+            var l = localStorage.getItem('mini-im-lang') || navigator.language || 'zh-CN'
+            document.documentElement.setAttribute('lang', String(l).toLowerCase().indexOf('en') === 0 ? 'en' : 'zh-CN')
+            // 字号 / 字重：沿用首页设置（登录页没有设置入口，但展示保持一致）
+            var fs = parseInt(localStorage.getItem('mini-im-font-size'), 10)
+            fs = isNaN(fs) ? 14 : Math.min(30, Math.max(10, fs))
+            document.documentElement.style.fontSize = fs + 'px'
+            document.documentElement.setAttribute('data-font-size', fs)
+            document.documentElement.setAttribute('data-font-weight', localStorage.getItem('mini-im-font-weight') || 'normal')
+        })()
+    </script>
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>miniIM登录 - BLN</title>
+    <title>mini-im</title>
     <meta name="keywords" content="IM系统,客服系统,h5聊天工具,web聊天工具,h5即时通讯,web即时通讯"/>
     <meta name="description" content="这是一个基于websocket的聊天工具"/>
     <link rel="shortcut icon" href="/web/favicon.ico">
     <link rel="stylesheet" href="/web/assets/lib/bootstrap-3.3.7/css/bootstrap.min.css">
-    <script src="/web/assets/lib/jquery-2.1.1/jquery.min.js"></script>
-    <script src="/web/assets/lib/bootstrap-3.3.7/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="/web/assets/css/1.0.0/common.css">
-    <link rel="stylesheet" href="/web/assets/css/1.0.0/login.css">
+    <link rel="stylesheet" href="/web/assets/css/1.0.0/common.css?v=20261001">
+    <link rel="stylesheet" href="/web/assets/css/1.0.0/login.css?v=20261001">
 </head>
 <body>
 <div id="app" class="container">
-    <div class="login-box col-md-3">
-        <h1>miniIM</h1>
-        <form class="form-horizontal" role="form">
+    <div class="login-box col-md-3" :class="{'is-register': mode === 'register'}">
+        <div class="settings-wrap" @click.stop="settingOpen = !settingOpen">
+            <button type="button" class="settings-btn" v-bind:class="{active: settingOpen}"
+                    :title="t('settings.title')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3.2"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+            </button>
+            <div class="settings-panel" v-show="settingOpen">
+                <div class="theme-switch" :title="t('theme.title')">
+                    <button type="button" class="theme-btn" v-bind:class="{active: theme === 'light'}"
+                            @click="setTheme('light')" :title="t('theme.light')">
+                        <svg viewBox="0 0 16 16" aria-hidden="true">
+                            <circle cx="8" cy="8" r="2.6"/>
+                            <path d="M8 1.1v2.2M8 12.7v2.2M1.1 8h2.2M12.7 8h2.2M4.54 4.54l1.13 1.13M10.33 10.33l1.13 1.13M11.46 4.54l-1.13 1.13M5.67 10.33l-1.13 1.13"/>
+                        </svg>
+                    </button>
+                    <button type="button" class="theme-btn" v-bind:class="{active: theme === 'system'}"
+                            @click="setTheme('system')" :title="t('theme.system')">
+                        <svg viewBox="0 0 16 16" aria-hidden="true">
+                            <rect x="1.6" y="2.6" width="12.8" height="8.8" rx="1.4"/>
+                            <path d="M8 11.4V14M5.6 14h4.8"/>
+                        </svg>
+                    </button>
+                    <button type="button" class="theme-btn" v-bind:class="{active: theme === 'dark'}"
+                            @click="setTheme('dark')" :title="t('theme.dark')">
+                        <svg viewBox="0 0 16 16" aria-hidden="true">
+                            <path d="M14 8.53A6 6 0 1 1 7.47 2a4.67 4.67 0 0 0 6.53 6.53z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="lang-switch" :title="t('lang.title')">
+                    <button type="button" class="lang-btn" v-bind:class="{active: lang === 'zh-CN'}"
+                            @click="setLang('zh-CN')" title="中文">中</button>
+                    <button type="button" class="lang-btn" v-bind:class="{active: lang === 'en-US'}"
+                            @click="setLang('en-US')" title="English">EN</button>
+                </div>
+            </div>
+        </div>
+        <h1>mini-im</h1>
+        <form class="form-horizontal" role="form" v-show="mode === 'login'">
             <div class="form-group">
-                <label for="username" class="col-sm-2 control-label">用户</label>
+                <label for="username" class="col-sm-2 control-label">{{t('login.username')}}</label>
                 <div class="col-sm-10">
-                    <input type="text" v-model="username" class="form-control" id="username" placeholder="请输入用户名">
+                    <input type="text" v-model="username" class="form-control" id="username"
+                           :placeholder="t('login.usernamePlaceholder')">
                 </div>
             </div>
             <div class="form-group">
-                <label for="password" class="col-sm-2 control-label">密码</label>
+                <label for="password" class="col-sm-2 control-label">{{t('login.password')}}</label>
                 <div class="col-sm-10">
-                    <input type="password" v-model="password" class="form-control" id="password" placeholder="请输入用户密码">
+                    <input type="password" v-model="password" class="form-control" id="password"
+                           :placeholder="t('login.passwordPlaceholder')">
                 </div>
             </div>
             <div class="form-group">
                 <div class="col-sm-offset-2 col-sm-10">
                     <div class="checkbox">
                         <label>
-                            <input v-model="isRemember" type="checkbox">请记住我
+                            <input v-model="isRemember" type="checkbox">{{t('login.rememberMe')}}
                         </label>
-                        <a v-show="isRememberMe" href="javascript:" @click="clearPwd" class="clear-password">清除密码缓存</a>
+                        <a v-show="isRememberMe" href="javascript:" @click="clearPwd"
+                           class="clear-password">{{t('login.clearPassword')}}</a>
                     </div>
                 </div>
             </div>
             <div class="form-group">
                 <div class="col-sm-offset-2 col-sm-10">
-                    <button @click="login" type="button" class="btn btn-success btn-sm">登录</button>
+                    <button @click="login" type="button" class="login-btn btn-sm">{{t('login.submit')}}</button>
                 </div>
+            </div>
+            <div class="auth-switch">
+                {{t('login.noAccount')}}
+                <a href="javascript:" @click="switchMode('register')">{{t('register.toRegister')}}</a>
+            </div>
+        </form>
+        <form class="form-horizontal" role="form" v-show="mode === 'register'">
+            <div class="form-group">
+                <label for="regUsername" class="col-sm-2 control-label">{{t('register.username')}}</label>
+                <div class="col-sm-10">
+                    <input type="text" v-model="regUsername" class="form-control" id="regUsername"
+                           :placeholder="t('register.usernamePlaceholder')">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="regNickname" class="col-sm-2 control-label">{{t('register.nickname')}}</label>
+                <div class="col-sm-10">
+                    <input type="text" v-model="regNickname" class="form-control" id="regNickname"
+                           :placeholder="t('register.nicknamePlaceholder')">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="regPassword" class="col-sm-2 control-label">{{t('register.password')}}</label>
+                <div class="col-sm-10">
+                    <input type="password" v-model="regPassword" class="form-control" id="regPassword"
+                           :placeholder="t('register.passwordPlaceholder')">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="regPassword2" class="col-sm-2 control-label">{{t('register.password2')}}</label>
+                <div class="col-sm-10">
+                    <input type="password" v-model="regPassword2" class="form-control" id="regPassword2"
+                           :placeholder="t('register.password2Placeholder')" @keyup.enter="register">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <button @click="register" type="button" class="login-btn btn-sm"
+                            :disabled="registerLoading">{{t('register.submit')}}</button>
+                </div>
+            </div>
+            <div class="auth-switch">
+                <a href="javascript:" @click="switchMode('login')">{{t('register.toLogin')}}</a>
             </div>
         </form>
     </div>
@@ -56,8 +155,8 @@
                 <span class="alert-box-close" @click="alertBoxParam.isShow = false">✕</span>
             </div>
             <div class="alert-box-msg">{{alertBoxParam.msg}}</div>
-            <div class="alert-box-foot">
-                <span class="alert-box-btn" @click="alertBoxParam.btnHandleFunc" v-if="alertBoxParam.btnText !== null">{{alertBoxParam.btnText}}</span>
+            <div class="alert-box-foot" v-show="alertBoxParam.btnText !== null">
+                <span class="alert-box-btn" @click="alertBoxParam.btnHandleFunc">{{alertBoxParam.btnText}}</span>
             </div>
         </div>
     </div>
@@ -69,15 +168,21 @@
 <script src="/web/assets/js/profile.js"></script>
 <script src="/web/assets/js/util/cookie.util.js"></script>
 <script src="/web/assets/js/util/crypt.util.js"></script>
+<script src="/web/assets/js/util/theme.util.js"></script>
+<script src="/web/assets/js/util/i18n.util.js?v=20261001"></script>
 <script src="/web/assets/js/cache.data.js"></script>
 <script>
     var profile = new Profile();
     var cookieUtil = new CookieUtil();
     var cryptUtil = new CryptUtil();
     var cache = new CacheData();
+    var themeUtil = new ThemeUtil();
+    var i18nUtil = new I18nUtil();
     var vm = new Vue({
         el: '#app',
         data: {
+            theme: 'system',
+            lang: 'zh-CN',
             alertBoxParam: {
                 isShow: false,
                 title: '',
@@ -87,12 +192,24 @@
                     this.isShow = false
                 }
             },
+            mode: 'login',
             username: '',
             password: '',
+            regUsername: '',
+            regNickname: '',
+            regPassword: '',
+            regPassword2: '',
+            registerLoading: false,
             isRemember: false,
-            isRememberMe: false
+            isRememberMe: false,
+            settingOpen: false
         },
         created() {
+            themeUtil.init()
+            this.theme = themeUtil.get()
+            this.lang = i18nUtil.get()
+            i18nUtil.applyHtmlLang(this.lang)
+            document.title = this.t('page.loginTitle')
             if (profile.get() !== null) {
                 location.href = 'index.html'
             }
@@ -106,11 +223,30 @@
             }
         },
         mounted() {
+            // 点击页面其他位置时收起设置面板
+            var _this = this
+            document.addEventListener('click', function () {
+                _this.settingOpen = false
+            })
         },
         methods: {
+            t(key, params) {
+                return i18nUtil.t(key, params, this.lang)
+            },
+            tMsg(msg) {
+                return i18nUtil.tServer(msg, this.lang)
+            },
+            setLang(v) {
+                this.lang = i18nUtil.set(v)
+                document.title = this.t('page.loginTitle')
+            },
+            setTheme(v) {
+                this.theme = v
+                themeUtil.set(v)
+            },
             alertBox(msg, title = null, btnText = null, btnFunc = null) {
                 this.alertBoxParam.isShow = true
-                this.alertBoxParam.title = (title === null) ? '提示' : title
+                this.alertBoxParam.title = (title === null) ? this.t('common.tip') : title
                 this.alertBoxParam.btnText = btnText
                 this.alertBoxParam.msg = msg
                 if (btnFunc !== null) {
@@ -127,10 +263,10 @@
             },
             login() {
                 if (!this.username) {
-                    return this.alertBox('请输入用户名')
+                    return this.alertBox(this.t('login.usernameRequired'))
                 }
                 if (!this.password) {
-                    return this.alertBox('请输入密码')
+                    return this.alertBox(this.t('login.passwordRequired'))
                 }
                 axios({
                     url: apiDomain + '/api/login',
@@ -158,8 +294,61 @@
                         sessionStorage.removeItem('isLoadFriendData')
                         location.href = 'index.html'
                     } else {
-                        this.alertBox(res.data.Message)
+                        this.alertBox(this.tMsg(res.data.Message))
                     }
+                })
+            },
+            switchMode(mode) {
+                this.mode = mode
+                this.alertBoxParam.isShow = false
+            },
+            // 用户名规则与后端 service.UsernamePattern 保持一致：6-20 位字母、数字、下划线或减号
+            isValidUsername(v) {
+                return /^[A-Za-z0-9_-]{6,20}$/.test(v)
+            },
+            register() {
+                var username = (this.regUsername || '').trim()
+                var nickname = (this.regNickname || '').trim()
+                var password = (this.regPassword || '').trim()
+                var password2 = (this.regPassword2 || '').trim()
+
+                if (!username) {
+                    return this.alertBox(this.t('register.usernameRequired'))
+                }
+                if (!this.isValidUsername(username)) {
+                    return this.alertBox(this.t('register.usernameRule'))
+                }
+                if (!password) {
+                    return this.alertBox(this.t('register.passwordRequired'))
+                }
+                if (password.length < 6) {
+                    return this.alertBox(this.t('register.passwordTooShort'))
+                }
+                if (password !== password2) {
+                    return this.alertBox(this.t('register.passwordNotMatch'))
+                }
+
+                this.registerLoading = true
+                axios({
+                    url: apiDomain + '/api/register',
+                    method: 'post',
+                    data: {
+                        username: username,
+                        password: password,
+                        nickname: nickname
+                    }
+                }).catch(function (err) {
+                    console.log(err)
+                }).then(res => {
+                    this.registerLoading = false
+                    if (!res || !res.data || res.data.StatusCode !== 0) {
+                        this.alertBox(res && res.data ? this.tMsg(res.data.Message) : this.tMsg('注册失败，请稍后重试'))
+                        return
+                    }
+                    // 注册成功：复用登录流程自动登录并进入聊天页
+                    this.username = username
+                    this.password = password
+                    this.login()
                 })
             }
         },

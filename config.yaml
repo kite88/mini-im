@@ -1,0 +1,47 @@
+# ==========================================================
+# mini-im 配置文件
+# 所有相对路径均以「启动进程时的工作目录」为基准
+# ==========================================================
+
+# 应用基础配置
+app:
+  name: mini-im             # 应用名，同时作为 Redis key 前缀
+  http_port: 2580           # HTTP 监听端口
+  run_mode: debug           # debug | test | release
+  web_dir: web              # 前端静态资源目录
+
+# PostgreSQL 数据库
+postgres:
+  host: 127.0.0.1
+  port: 5432
+  user: postgres
+  password: 123456          # 与 docker-compose.yml 中的 POSTGRES_PASSWORD 保持一致
+  dbname: mini-im
+  sslmode: disable          # disable | require | verify-full
+  timezone: Asia/Shanghai
+
+# Redis（缓存 / 单点登录 / 在线状态 / 消息队列）
+redis:
+  addr: 127.0.0.1:6379
+  password: ""
+  db: 1
+
+# JWT
+jwt:
+  secret: "hjJlbE8LW7NAO15v"
+  expire: 604800            # token 有效期（秒），默认 7 天
+
+# 雪花 ID（用户表 / 好友申请表主键；消息表主键是 UUID v7，不含节点号）
+# 多实例部署时必须保证各实例 node_id 不同，取值 0~1023；-1 表示按本机网卡地址自动推导
+snowflake:
+  node_id: -1
+
+# 初始化演示数据（仅当账号不存在时写入）
+seed:
+  enabled: false
+  password: "123123"
+  accounts:
+    - { username: ha1234,  nickname: 客服小哈 }
+    - { username: wu1234,      nickname: 客服小吴 }
+    - { username: zhu333,    nickname: 客服小朱 }
+    - { username: for505, nickname: 客服505 }

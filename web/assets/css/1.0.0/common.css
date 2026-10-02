@@ -1,75 +1,528 @@
-.alert-box {
-    width: 300px;
-    height: 120px;
+/* ========== 主题变量（light / dark，由 html[data-theme] 切换） ========== */
+:root {
+    --bg-body: #eef1f6;
+    --bg-panel: #ffffff;
+    --bg-panel-2: #f2f4f8;
+    --bg-nav-top: #343d54;
+    --bg-nav-bottom: #232a3b;
+    --text-1: #24292f;
+    --text-2: #6a737d;
+    --border: #e3e6eb;
+    --hover: #f0f3f8;
+    --accent: #4e8cff;
+    --bubble-self: #4e8cff;
+    --bubble-other-bg: #ffffff;
+    --bubble-other-text: #24292f;
+    --danger: #e5534b;
+    --shadow: 0 6px 24px rgba(16, 24, 40, .1);
+    --scroll-thumb: rgba(0, 0, 0, .25);
+    --item-active: rgba(78, 140, 255, .12);
+}
+
+html[data-theme="dark"] {
+    --bg-body: #10141c;
+    --bg-panel: #1a1f2b;
+    --bg-panel-2: #232937;
+    --bg-nav-top: #1c2230;
+    --bg-nav-bottom: #12161f;
+    --text-1: #e6e9ef;
+    --text-2: #98a1b3;
+    --border: #2c3344;
+    --hover: #262d3d;
+    --accent: #5b9bff;
+    --bubble-self: #3f7de6;
+    --bubble-other-bg: #262d3d;
+    --bubble-other-text: #e6e9ef;
+    --danger: #e0655e;
+    --shadow: 0 6px 24px rgba(0, 0, 0, .45);
+    --scroll-thumb: rgba(255, 255, 255, .22);
+    --item-active: rgba(91, 155, 255, .18);
+    color-scheme: dark;
+}
+
+/* ========== 字号 / 字重设置（设置抽屉里的「字号」「字重」） ========== */
+/* 根字号是全局 rem 基准：默认 14px，与改造前像素级一致；
+   CSS 里的字号统一写成 rem，切根字号即整体缩放文字（布局与图片尺寸不受影响）。
+   抽屉里的滑杆在 10~30px 之间连续调节，由 font.util.js 直接写内联样式
+   （连续取值没法用有限的属性选择器表达，这里只留默认值兜底） */
+html {
+    font-size: 14px;
+}
+
+/* 字重档位：常规保持原样；加粗时正文整体加粗一档，标题层级同步上浮 */
+:root {
+    --fw-base: 400; /* 正文 */
+    --fw-medium: 600; /* 昵称 / 小标题 */
+    --fw-bold: 700; /* 强调 / 大标题 */
+}
+
+html[data-font-weight="bold"] {
+    --fw-base: 600;
+    --fw-medium: 700;
+    --fw-bold: 800;
+}
+
+/* bootstrap 用固定 px 定义的基础字号改写成 rem，跟随根字号缩放 */
+body,
+.btn,
+.form-control {
+    font-size: 1rem;
+}
+
+.btn-xs,
+.btn-sm {
+    font-size: 0.857rem;
+}
+
+/* 表单控件 / 按钮默认不继承 body 的字重，这里显式跟随字重设置 */
+body,
+input,
+textarea,
+button,
+.btn,
+.form-control {
+    font-weight: var(--fw-base);
+}
+
+/* ========== 主题 / 语言切换器组合（收纳在右上角的设置齿轮下拉中） ========== */
+.switch-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 设置齿轮按钮 + 下拉面板 */
+.settings-wrap {
+    position: relative;
+    display: inline-flex;
+}
+
+.settings-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background-color: var(--bg-panel-2);
+    color: var(--text-2);
+    cursor: pointer;
+    outline: none;
+    transition: background-color .2s, color .2s, border-color .2s;
+}
+
+.settings-btn:hover {
+    color: var(--text-1);
+    background-color: var(--hover);
+}
+
+.settings-btn.active {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+}
+
+.settings-btn svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+    pointer-events: none;
+}
+
+.settings-panel {
     position: absolute;
-    z-index: 10;
-    left: 0;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background-color: var(--bg-panel);
+    box-shadow: var(--shadow);
+}
+
+/* 面板内切换器放大：上下两行、按钮加高加宽，方便手机点按 */
+.settings-panel .theme-switch,
+.settings-panel .lang-switch {
+    display: flex;
+    gap: 4px;
+    padding: 3px;
+}
+
+.settings-panel .theme-btn,
+.settings-panel .lang-btn {
+    flex: 1 1 auto;
+    min-width: 40px;
+    height: 32px;
+    padding: 0 8px;
+    font-size: 1rem;
+}
+
+.settings-panel .theme-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* ========== 主题切换器（light / system / dark）与语言切换器（中 / EN） ========== */
+.theme-switch,
+.lang-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 8px;
+    background-color: var(--bg-panel-2);
+    border: 1px solid var(--border);
+}
+
+.theme-switch .theme-btn,
+.lang-switch .lang-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    height: 22px;
+    padding: 0 5px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-2);
+    font-size: 0.857rem;
+    line-height: 1;
+    cursor: pointer;
+    outline: none;
+    transition: background-color .2s, color .2s;
+}
+
+.theme-switch .theme-btn:hover,
+.lang-switch .lang-btn:hover {
+    color: var(--text-1);
+    background-color: var(--hover);
+}
+
+.theme-switch .theme-btn.active,
+.lang-switch .lang-btn.active {
+    background-color: var(--accent);
+    color: #ffffff;
+}
+
+/* 主题图标：线性 SVG，颜色跟随按钮文字色 */
+.theme-switch .theme-btn svg {
+    width: 13px;
+    height: 13px;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+
+/* ========== 首页设置抽屉（贴 .cont-box 右侧滑出，覆盖上面的浮层样式） ========== */
+.settings-panel-drawer {
+    /* 抽屉挂在 .cont-box 内，所以用 absolute：右边缘与容器右边缘对齐，
+       上下也跟随容器（被容器的 overflow: hidden 裁出与卡片一致的圆角） */
+    position: absolute;
     top: 0;
     right: 0;
     bottom: 0;
-    margin: 15% auto;
-    border: 1px solid #c0c0c0;
-    box-shadow: 3px 3px 3px #888888;
-    background-color: #ffffff;
+    z-index: 300;
+    width: 320px;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: 20px;
+    overflow-y: auto;
+    border: 0;
+    border-left: 1px solid var(--border);
+    border-radius: 0;
+    animation: settings-drawer-in .24s ease;
+}
+
+@keyframes settings-drawer-in {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+/* 分组标题：右侧可挂当前值（字号滑杆的 px 数）
+   注意：抽屉内部的字号刻意用 px —— 面板是「调字号」的地方，拖动时它自己不能跟着变大变小，
+   否则滑杆会上下跳动、拖不准；面板外的聊天界面才是实时预览 */
+.settings-panel-drawer .settings-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 15px;
+    font-weight: var(--fw-medium);
+    color: var(--text-1);
+}
+
+.settings-panel-drawer .settings-value {
+    font-size: 12px;
+    font-weight: var(--fw-base);
+    color: var(--text-2);
+    /* 等宽数字：拖动滑杆时数值不会左右跳动 */
+    font-variant-numeric: tabular-nums;
+}
+
+/* 字号滑杆（10 ~ 30px）：轨道细、滑块圆，深浅色主题都清晰 */
+.settings-panel-drawer .settings-range {
+    -webkit-appearance: none;
+    appearance: none;
+    display: block;
+    width: 100%;
+    height: 6px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background-color: var(--bg-panel-2);
+    outline: none;
+    cursor: pointer;
+}
+
+.settings-panel-drawer .settings-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--bg-panel);
+    border-radius: 50%;
+    background-color: var(--accent);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
+    cursor: pointer;
+}
+
+.settings-panel-drawer .settings-range::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--bg-panel);
+    border-radius: 50%;
+    background-color: var(--accent);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
+    cursor: pointer;
+}
+
+.settings-panel-drawer .settings-range::-moz-range-track {
+    height: 6px;
+    border-radius: 3px;
+    background-color: var(--bg-panel-2);
+}
+
+/* 组内选项等宽铺满一行：主题 / 多语言 / 字重 */
+.settings-panel-drawer .theme-switch,
+.settings-panel-drawer .settings-options {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+}
+
+/* 选项按钮与「发送 / 同意 / 拒绝」那套操作按钮同尺寸：高 30px、圆角 6px、单行文字。
+   字号仍固定 px（面板是调字号的地方，不能跟着缩放，否则拖滑杆时会撑破布局） */
+.settings-panel-drawer .theme-switch .theme-btn,
+.settings-panel-drawer .settings-options .option-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background-color: var(--bg-panel-2);
+    color: var(--text-2);
+    font-size: 13px;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    outline: none;
+    transition: color .2s, background-color .2s, border-color .2s;
+}
+
+/* 主题选项：图标 + 文案横排，一行放得下（图标比文字小一号） */
+.settings-panel-drawer .theme-switch .theme-btn {
+    gap: 4px;
+    padding: 0 8px;
+    font-size: 12px;
+}
+
+.settings-panel-drawer .theme-switch .theme-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* 文案过长（例如某些语言的主题名）时省略号截断，不撑破等宽按钮 */
+.settings-panel-drawer .theme-switch .theme-btn .theme-btn-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.settings-panel-drawer .theme-switch .theme-btn:hover,
+.settings-panel-drawer .settings-options .option-btn:hover {
+    color: var(--text-1);
+    background-color: var(--hover);
+}
+
+.settings-panel-drawer .theme-switch .theme-btn.active,
+.settings-panel-drawer .settings-options .option-btn.active {
+    color: #ffffff;
+    background-color: var(--accent);
+    border-color: var(--accent);
+}
+
+/* ========== 弹窗 ========== */
+.shade {
+    position: fixed;
+    inset: 0;
+    z-index: 500; /* 高于用户信息卡片(100)、设置面板(300)等，保证弹窗始终在最上层 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 16px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    background-color: rgba(0, 0, 0, .45);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    animation: shade-fade-in .2s ease;
+}
+
+.alert-box {
+    position: relative;
+    z-index: 510;
+    width: 320px;
+    max-width: 100%; /* 小屏自动收缩，配合 shade 的 padding 不贴边 */
+    max-height: calc(100vh - 48px);
+    max-height: calc(100dvh - 48px); /* 移动端动态视口高度，避免被浏览器工具栏遮挡 */
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    background-color: var(--bg-panel);
+    border-radius: 14px;
+    overflow: hidden;
+    animation: alert-box-pop .22s ease;
 }
 
 .alert-box .alert-box-head {
-    background-color: #5e5e5e;
-    width: 100%;
-    display: inline-block;
-    padding: 5px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, var(--bg-nav-top), var(--bg-nav-bottom));
 }
 
 .alert-box .alert-box-head .alert-box-title {
-    font-size: 10px;
+    font-size: 1rem;
     color: #ffffff;
-    font-weight: bold;
-    float: left;
+    font-weight: var(--fw-medium);
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .alert-box .alert-box-head .alert-box-close {
-    font-size: 12px;
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.857rem;
     color: #ffffff;
-    font-weight: bold;
-    float: right;
-    width: 20px;
-    background-color: rgba(255, 0, 0, 0.8);
-    border-radius: 2px;
-    text-align: center;
+    background-color: rgba(255, 255, 255, .18);
+    border-radius: 50%;
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color .2s, transform .15s;
+}
+
+.alert-box .alert-box-head .alert-box-close:hover {
+    background-color: var(--danger);
+}
+
+.alert-box .alert-box-head .alert-box-close:active {
+    transform: scale(.9);
 }
 
 .alert-box .alert-box-msg {
-    font-size: 14px;
+    flex: 1;
+    overflow-y: auto; /* 长内容可滚动，不撑破弹窗 */
+    min-height: 44px;
+    font-size: 1rem;
+    line-height: 1.6;
     text-align: left;
-    color: #777777;
-    padding: 5px;
+    word-break: break-word;
+    color: var(--text-1);
+    padding: 16px;
 }
 
 .alert-box .alert-box-foot {
-    width: 100%;
-    display: inline-block;
-    position: absolute;
-    bottom: 0;
-    padding: 5px;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 12px 14px;
+    border-top: 1px solid var(--border);
 }
 
 .alert-box .alert-box-btn {
-    padding: 4px 8px;
-    background-color: rgba(255, 0, 0, 0.8);
+    min-height: 36px; /* 触屏友好的点击区域 */
+    padding: 6px 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--accent);
     color: #ffffff;
-    font-size: 10px;
-    float: right;
-    border-radius: 5px;
+    font-size: 0.929rem;
+    border-radius: 8px;
     cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: filter .2s, transform .15s;
 }
 
-.shade {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, .2);
-    left: 0;
-    top: 0;
-    z-index: 9;
+.alert-box .alert-box-btn:hover {
+    filter: brightness(1.08);
+}
+
+.alert-box .alert-box-btn:active {
+    transform: scale(.96);
+}
+
+@keyframes shade-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes alert-box-pop {
+    from { opacity: 0; transform: translateY(12px) scale(.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .shade,
+    .alert-box {
+        animation: none;
+    }
 }
