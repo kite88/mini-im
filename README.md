@@ -2,6 +2,9 @@
 
 # mini-im
 
+[![Release](https://img.shields.io/github/v/release/kite88/mini-im)](https://github.com/kite88/mini-im/releases/latest)
+[![License](https://img.shields.io/github/license/kite88/mini-im)](LICENSE)
+
 Go + Gin + GORM(PostgreSQL) + Redis 实现的即时通讯 / 客服系统。
 前端是原生 Vue 2 + Axios 静态页，由后端直接托管，不需要单独构建。
 同一套页面响应式适配 PC 与手机，无构建流程、无外部图片资源。
