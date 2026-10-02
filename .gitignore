@@ -6,6 +6,9 @@
 *.out
 *.log
 
+# 发布产物（build.sh / release workflow 的输出）
+/dist/
+
 # 本地覆盖配置（默认 config.yaml 需要入库）
 *.local.yaml
 .env

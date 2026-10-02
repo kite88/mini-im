@@ -1,0 +1,70 @@
+name: release
+
+# 推送到 v* 标签时，自动交叉编译全部平台产物并创建 / 更新 GitHub Release：
+#
+#   git tag v1.0.1 && git push origin v1.0.1
+#
+# 产物（dist/checksums.txt）会先自检，通过后才发 Release。
+# 带后缀的标签（如 v1.0.1-rc1）会被标记为 prerelease，不会占用 Latest。
+#
+# Release 说明优先取 docs/release-notes/<tag>.md；没有该文件时用一句产物说明加
+# GitHub 自动生成的提交列表。标签已存在 Release 时会改为更新说明并覆盖产物，
+# 因此重打标签可以安全地重新发布。
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write # gh release create / upload 需要写权限
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: 静态检查
+        run: go vet ./...
+
+      - name: 交叉编译全部平台
+        run: ./build.sh
+
+      - name: 校验产物
+        working-directory: dist
+        run: sha256sum -c checksums.txt
+
+      - name: 创建或更新 Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          assets=(dist/*.zip dist/*.tar.gz dist/checksums.txt)
+
+          notes_file="docs/release-notes/${tag}.md"
+          if [ -f "$notes_file" ]; then
+            notes_args=(--notes-file "$notes_file")
+            auto_args=()
+          else
+            notes_args=(--notes "Linux / macOS 用户下载 .tar.gz，Windows 用户下载 .zip，解压后即为可运行目录（可执行文件 + config.yaml + web/），跨平台归档均为 CGO_ENABLED=0 静态编译。checksums.txt 是全部归档的 SHA256，可用 sha256sum -c 校验。")
+            auto_args=(--generate-notes)
+          fi
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release edit "$tag" --title "$tag" "${notes_args[@]}"
+            gh release upload "$tag" "${assets[@]}" --clobber
+          else
+            prerelease=()
+            case "$tag" in
+              *-*) prerelease=(--prerelease) ;;
+            esac
+            gh release create "$tag" --title "$tag" "${notes_args[@]}" "${auto_args[@]}" \
+              "${prerelease[@]}" "${assets[@]}"
+          fi
