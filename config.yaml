@@ -6,7 +6,7 @@
 # 应用基础配置
 app:
   name: mini-im             # 应用名，同时作为 Redis key 前缀
-  http_port: 2580           # HTTP 监听端口
+  http_port: 8280           # HTTP 监听端口
   run_mode: debug           # debug | test | release
   web_dir: web              # 前端静态资源目录
 

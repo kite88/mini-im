@@ -66,7 +66,10 @@ docker compose up -d          # 启动 PostgreSQL + Redis（本机已有实例�
 go run .                      # 启动服务
 ```
 
-打开 <http://127.0.0.1:2580/>，会自动跳转到 `/web/index.html`；
+> 目录里没有 `config.yaml` 时会先进入[初始化配置向导](#初始化配置向导)：浏览器打开
+> <http://localhost:8280/setup> 填好数据库 / Redis 并保存，服务随即自动启动。
+
+打开 <http://127.0.0.1:8280/>，会自动跳转到 `/web/index.html`；
 未登录时前端会引导到 `/web/login.html`，注册或登录后进入聊天页。
 
 新库是空的，直接在登录页注册账号即可（用户名 6-20 位字母、数字、下划线或减号，密码至少 6 位），
@@ -115,7 +118,7 @@ CREATE DATABASE "mini-im" ENCODING 'UTF8';
 ### 配置
 
 `config.yaml` 默认为：PostgreSQL `127.0.0.1:5432` / `postgres` / `123456` / 库 `mini-im`，
-Redis `127.0.0.1:6379` DB `1`，HTTP 端口 `2580`。
+Redis `127.0.0.1:6379` DB `1`，HTTP 端口 `8280`。
 `app.name`（默认 `mini-im`）同时作为 Redis key 的前缀，改它等于换一套缓存命名空间。
 
 除 `seed.*` 外的配置都能用环境变量覆盖，容器部署时无需改文件：
@@ -135,12 +138,35 @@ IM_PG_HOST=pg IM_PG_PASSWORD=secret IM_REDIS_ADDR=redis:6379 IM_JWT_SECRET=xxx g
 | `IM_REDIS_ADDR` `IM_REDIS_PASSWORD` `IM_REDIS_DB` | Redis 连接 |
 | `IM_JWT_SECRET` `IM_JWT_EXPIRE` | JWT 密钥与有效期（秒） |
 | `IM_SNOWFLAKE_NODE_ID` | 雪花 ID 节点号（0~1023，默认 -1 按本机地址自动推导），只影响用户与好友申请 |
+| `SETUP_FORCE` | 取 `1` / `true` / `yes` / `on` 时强制重新进入初始化向导（原配置备份为 `config.yaml.bak`） |
+| `SETUP_PORT` | 初始化向导自身的监听端口，默认 `8280` |
 
 `seed.*` 没有环境变量覆盖，只有配置文件能开关。
 
 </details>
 
 生产环境请务必通过 `IM_JWT_SECRET` 注入密钥，不要沿用默认值。
+
+### 初始化配置向导
+
+目录下**没有 `config.yaml` 时，服务不会用默认值硬跑**，而是先启动一个只用于填配置的临时服务：
+
+```bash
+go run .              # 目录里没有 config.yaml 时进入向导
+```
+
+浏览器打开 <http://localhost:8280/setup>（端口可用 `SETUP_PORT` 指定；在服务器上启动时日志会打印可远程访问的 IP），
+填写 PostgreSQL / Redis 后保存：
+
+- 两个连接都能**真实点一次**「测试连接」，数据库连不上会拦下保存（可勾选忽略并强制保存）；
+- 保存时按 `config.example.yaml` 的注释与排版渲染写回 `config.yaml`，**中文注释完整保留**，权限 0600；
+- 写入完成后向导自动关闭，业务服务随即按新配置启动，浏览器 3.5 秒后跳到 `/setup` 状态页。
+
+已配置完成后访问 `/setup` 看到的是服务状态页（健康检查、在线连接数、配置文件路径），不再是 404。
+想重新配置：`SETUP_FORCE=1 go run .`，原配置会备份为 `config.yaml.bak`。
+
+向导表单只包含 `app.http_port` / `app.run_mode`、`postgres`（除 `timezone`）、`redis`、`jwt` 与 `seed.enabled` / `seed.password`；
+`app.name`、`app.web_dir`、`postgres.timezone`、`snowflake.node_id` 与 `seed.accounts` 刻意不进表单，写回时按模板值补齐 —— 需要改这几项请直接编辑 `config.yaml`。
 
 `snowflake.node_id` 默认 `-1`，即按本机网卡地址自动推导节点号；**多实例部署时必须为每个实例
 显式配置不同值（0~1023）**，否则两个实例在同一毫秒可能生成相同的用户 / 好友申请 ID。
@@ -262,6 +288,7 @@ IM_PG_HOST=pg IM_PG_PASSWORD=secret IM_REDIS_ADDR=redis:6379 IM_JWT_SECRET=xxx g
 | GET | `/ws?token=xxx` | 是 | WebSocket 长连接，也兼容 Authorization 头 |
 | GET | `/avatar?name=&label=` | 否 | 动态生成 SVG 头像 |
 | GET | `/healthz` | 否 | 健康检查，返回在线连接数 |
+| GET | `/setup` | 否 | 初始化配置向导（无配置文件时）；配置完成后是服务状态页 |
 
 ### 响应格式
 
@@ -342,7 +369,7 @@ Content-Type: application/json
 
 ### WebSocket
 
-连接 `ws://127.0.0.1:2580/ws?token=<token>`，建立后会先收到一条
+连接 `ws://127.0.0.1:8280/ws?token=<token>`，建立后会先收到一条
 `content` 为 `socket服务连接成功` 的消息，随后依次补发积压的离线消息。
 
 上行报文：
@@ -396,7 +423,7 @@ Content-Type: application/json
 go run ./tools/e2e                  # 全部场景
 go run ./tools/e2e -scenario=core   # 只跑主链路
 go run ./tools/e2e -scenario=edge   # 只跑边界 / 并发
-go run ./tools/e2e -addr=http://127.0.0.1:2580
+go run ./tools/e2e -addr=http://127.0.0.1:8280
 ```
 
 脚本会真实注册固定账号（`carol_01` `bob_01` `dave_01` `erin_01` `frank_01` `nick0_01`，密码统一 `123456`）并写入消息，
@@ -416,10 +443,12 @@ redis-cli -n 1 flushdb
 ## 项目结构
 
 ```
-main.go                 入口：初始化组件 → 启动服务 → 优雅退出
-config.yaml             配置
+main.go                 入口：加载配置（缺失则先进向导）→ 初始化组件 → 启动服务 → 优雅退出
+config.yaml             配置（本地）
+config.example.yaml     配置模板：初始化向导写回 config.yaml 时的底稿
 docker-compose.yml      PostgreSQL + Redis
-conf/                   配置加载、Redis key 生成
+conf/                   配置加载与校验、按模板渲染写回、Redis key 生成
+setup/                  首次启动的初始化配置向导（页面 + 连接探测 + 写回）
 db/                     GORM 连接与自动迁移、Redis 客户端、演示数据
 model/                  实体：im_user / im_friend / im_friend_request / im_message / im_read_state / im_blacklist / im_contact_state
 dao/                    数据访问
@@ -429,7 +458,7 @@ api/middleware          鉴权、跨域
 ws/                     WebSocket 连接中心
 task/                   后台消息落库任务
 route/                  路由注册
-pkg/                    统一响应、JWT、HTTP 工具、雪花 ID、UUID v7
+pkg/                    统一响应、JWT、HTTP 工具、雪花 ID、UUID v7、端口错误提示
 web/                    前端静态页
 docs/images/            README 截图
 tools/                  维护脚本：e2e 回归、favicon 生成、Bootstrap CSS 精简
@@ -607,6 +636,8 @@ PostgreSQL 原生支持四字节 UTF-8，直接明文存储。旧 MySQL 实现�
 - 关闭 debug：`IM_RUN_MODE=release`，同时 gorm 日志降为 warn 级别
 - 反向代理需要透传 WebSocket 升级头 `Upgrade` / `Connection`，且不要设置过短的读超时
 - 应用监听 `SIGINT` / `SIGTERM`，退出时等待 10s 让在途请求结束并关闭数据库连接
+- 配置就绪后 `/setup` 只是服务状态页，但仍建议在网关层拦掉它：初始化向导不应暴露到公网
+  （生产环境不要把 `SETUP_FORCE` 留在启动环境里）
 
 ---
 

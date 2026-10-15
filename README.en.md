@@ -68,7 +68,10 @@ docker compose up -d          # start PostgreSQL + Redis (skip if you run them n
 go run .                      # start the service
 ```
 
-Open <http://127.0.0.1:2580/> — it redirects to `/web/index.html`.
+> With no `config.yaml` present, mini-im enters the [setup wizard](#setup-wizard) first: open
+> <http://localhost:8280/setup>, fill in the database / Redis and save — the service then starts by itself.
+
+Open <http://127.0.0.1:8280/> — it redirects to `/web/index.html`.
 When no token is present the front end sends you to `/web/login.html`; register or sign in to reach the chat page.
 
 A fresh database is empty, so just register on the login page (username: 6-20 chars of letters, digits,
@@ -121,7 +124,7 @@ CREATE DATABASE "mini-im" ENCODING 'UTF8';
 ### Configuration
 
 `config.yaml` defaults to: PostgreSQL `127.0.0.1:5432` / `postgres` / `123456` / database `mini-im`,
-Redis `127.0.0.1:6379` DB `1`, HTTP port `2580`.
+Redis `127.0.0.1:6379` DB `1`, HTTP port `8280`.
 `app.name` (default `mini-im`) is also used as the Redis key prefix, so changing it is equivalent to switching
 to a whole new cache namespace.
 
@@ -142,12 +145,39 @@ IM_PG_HOST=pg IM_PG_PASSWORD=secret IM_REDIS_ADDR=redis:6379 IM_JWT_SECRET=xxx g
 | `IM_REDIS_ADDR` `IM_REDIS_PASSWORD` `IM_REDIS_DB` | Redis connection |
 | `IM_JWT_SECRET` `IM_JWT_EXPIRE` | JWT secret and lifetime (seconds) |
 | `IM_SNOWFLAKE_NODE_ID` | Snowflake node id (0~1023, default -1 = derived from the local NIC address); only affects users and friend requests |
+| `SETUP_FORCE` | `1` / `true` / `yes` / `on` forces the setup wizard again (the old config is backed up as `config.yaml.bak`) |
+| `SETUP_PORT` | Port the setup wizard itself listens on, default `8280` |
 
 `seed.*` has no environment-variable override — only the config file can toggle it.
 
 </details>
 
 In production, always inject the secret through `IM_JWT_SECRET` instead of keeping the default value.
+
+### Setup wizard
+
+When there is **no `config.yaml`**, the service does not fall back to built-in defaults — it starts a temporary
+server whose only job is to collect the configuration:
+
+```bash
+go run .              # enters the wizard when config.yaml is missing
+```
+
+Open <http://localhost:8280/setup> (override the port with `SETUP_PORT`; when started on a server the log also
+prints the LAN addresses), fill in PostgreSQL / Redis and save:
+
+- Both connections can be **tested for real**; an unreachable database blocks saving (you may ignore and force-save);
+- Saving renders `config.yaml` from `config.example.yaml`, **keeping every comment and the layout**, mode 0600;
+- The wizard then shuts down, the service starts with the new config, and the browser jumps to the `/setup`
+  status page 3.5 seconds later.
+
+Once configured, `/setup` shows the service status page (health check, live connection count, config path)
+instead of a 404. To reconfigure: `SETUP_FORCE=1 go run .`; the old config is backed up as `config.yaml.bak`.
+
+The form covers `app.http_port` / `app.run_mode`, `postgres` (except `timezone`), `redis`, `jwt`, and
+`seed.enabled` / `seed.password`. `app.name`, `app.web_dir`, `postgres.timezone`, `snowflake.node_id` and
+`seed.accounts` are deliberately absent — on save they are inherited from the template, so edit `config.yaml`
+directly to change them.
 
 `snowflake.node_id` defaults to `-1`, meaning the node id is derived from the machine's NIC address.
 **In a multi-instance deployment you must set a different explicit value (0~1023) per instance**, otherwise two
@@ -279,6 +309,7 @@ Authentication: `Authorization: Bearer <token>`.
 | GET | `/ws?token=xxx` | yes | WebSocket long connection; an `Authorization` header also works |
 | GET | `/avatar?name=&label=` | no | Dynamically generated SVG avatar |
 | GET | `/healthz` | no | Health check, returns the number of live connections |
+| GET | `/setup` | no | Setup wizard (when no config file exists); service status page once configured |
 
 ### Response format
 
@@ -364,7 +395,7 @@ An element of the conversation list `GET /api/messages` looks like this:
 
 ### WebSocket
 
-Connect to `ws://127.0.0.1:2580/ws?token=<token>`; the first message you receive has the content
+Connect to `ws://127.0.0.1:8280/ws?token=<token>`; the first message you receive has the content
 `socket服务连接成功` ("socket connected"), followed by any queued offline messages in order.
 
 Upstream frame:
@@ -421,7 +452,7 @@ contacts immediately, concurrent messages, oversized messages and forged `sender
 go run ./tools/e2e                  # all scenarios
 go run ./tools/e2e -scenario=core   # main chain only
 go run ./tools/e2e -scenario=edge   # edge cases / concurrency only
-go run ./tools/e2e -addr=http://127.0.0.1:2580
+go run ./tools/e2e -addr=http://127.0.0.1:8280
 ```
 
 The script really registers fixed accounts (`carol_01` `bob_01` `dave_01` `erin_01` `frank_01` `nick0_01`,
@@ -442,10 +473,12 @@ Current baseline: **94/94 assertions passing**.
 ## Project layout
 
 ```
-main.go                 Entry point: init components → start serving → graceful shutdown
-config.yaml             Configuration
+main.go                 Entry point: load config (wizard first if missing) → init components → start serving → graceful shutdown
+config.yaml             Configuration (local)
+config.example.yaml     Config template: the base the setup wizard renders config.yaml from
 docker-compose.yml      PostgreSQL + Redis
-conf/                   Config loading, Redis key generation
+conf/                   Config loading and validation, template-based write-back, Redis key generation
+setup/                  First-run setup wizard (page + connection probe + write-back)
 db/                     GORM connection and auto-migration, Redis client, demo seed data
 model/                  Entities: im_user / im_friend / im_friend_request / im_message / im_read_state / im_blacklist / im_contact_state
 dao/                    Data access
@@ -455,7 +488,7 @@ api/middleware          Auth, CORS
 ws/                     WebSocket connection hub
 task/                   Background message-persistence task
 route/                  Route registration
-pkg/                    Unified response, JWT, HTTP helpers, Snowflake ID, UUID v7
+pkg/                    Unified response, JWT, HTTP helpers, Snowflake ID, UUID v7, port error hints
 web/                    Front-end static pages
 docs/images/            Screenshots used by the READMEs
 tools/                  Maintenance scripts: e2e regression, favicon generation, Bootstrap CSS trimming
@@ -654,6 +687,8 @@ unescape logic of the old MySQL implementation has been removed entirely.
   short a read timeout
 - The application listens for `SIGINT` / `SIGTERM` and, on shutdown, waits 10s for in-flight requests to finish
   before closing the database connection
+- Once configured, `/setup` is only a status page, but it is still worth blocking it at the gateway: the setup
+  wizard should never be exposed publicly (never leave `SETUP_FORCE` set in a production environment)
 
 ---
 

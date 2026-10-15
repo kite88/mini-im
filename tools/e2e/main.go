@@ -6,7 +6,7 @@
 //	go run ./tools/e2e                        # 跑全部场景
 //	go run ./tools/e2e -scenario=core         # 只跑主链路
 //	go run ./tools/e2e -scenario=edge         # 只跑边界 / 并发场景
-//	go run ./tools/e2e -addr=http://127.0.0.1:2580
+//	go run ./tools/e2e -addr=http://127.0.0.1:8280
 //
 // 注意：脚本会真实注册账号并写入数据，且断言依赖「账号此前不存在、彼此尚不是好友」，
 // 因此请在干净库上运行；重复运行请先清库：
@@ -624,7 +624,7 @@ func urlEscape(s string) string {
 }
 
 func main() {
-	addr := flag.String("addr", "http://127.0.0.1:2580", "被测服务地址")
+	addr := flag.String("addr", "http://127.0.0.1:8280", "被测服务地址")
 	scenario := flag.String("scenario", "all", "运行场景：all | core | edge")
 	flag.Parse()
 

@@ -2,6 +2,24 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)，版本号形如 `v主版本.次版本.修订号`。
 
+## [v1.1.0] - 2026-10-16
+
+新增首次启动的初始化配置向导，发布包改为「不带配置文件、首次启动现场生成」的形态。
+
+### 新增
+
+- **初始化配置向导**：目录下没有 `config.yaml` 时不再用内置默认值硬跑，而是先起一个临时服务（`/setup`）引导填写 PostgreSQL / Redis：可真实点一次「测试连接」，保存时按 `config.example.yaml` 的注释与排版渲染写回（权限 0600，旧配置备份为 `.bak`），写回后业务服务自动接管同一端口；已配置后访问 `/setup` 是服务状态页，`SETUP_FORCE=1` 可重新配置。
+- **监听失败的可操作提示**（`pkg/port`）：Windows 的 `winnat` 会随机把一段端口划为保留区间，落在区间里的端口即使没有任何进程占用也 bind 不了，而报错原文只是一句「权限不足」。现在这类错误会补上排查命令与换端口的做法，端口被占用的情况同理。
+
+### 工程
+
+- 配置文件缺失时返回 `ErrConfigNotFound` 并进入向导（此前是打印一句提示后使用内置默认值继续启动）；向导写回只替换表单覆盖到的标量，`app.name` / `app.web_dir` / `postgres.timezone` / `snowflake.node_id` / `seed.accounts` 按模板值保留，中文注释与排版原样不动。
+- `config.example.yaml` 入库，兼作初始化向导写回配置时的底稿。
+- 发布归档里**不再带 `config.yaml`**（避免把开发用的默认 JWT 密钥发出去），改为带 `config.example.yaml`；首次双击启动即进入向导。
+- 归档名与包内顶层目录都带版本号（如 `mini-im-v1.1.0-windows-amd64.zip`），包内新增 `version.txt`，启动脚本启动时打印版本；`build.sh` 新增 `-v` 选项（省略时取最近的 git 标签，且必须是 `vX.Y.Z` 形式，避免把 `v1.0.0-3-gabc123` 打进归档名），打包前校验 `web/index.html`、`config.example.yaml`、`LICENSE` 齐全，缺 `zip` 时退回 Python `zipfile`。
+- GitHub Actions 在上传前自检产物：归档名含标签、`version.txt` 与标签一致、包内有页面与配置模板、包内没有 `config.yaml`。
+- 默认 HTTP 端口由 `2580` 改为 `8280`：配置文件与模板、初始化向导默认监听端口、`tools/e2e` 默认地址、启动脚本与文档里的示例地址同步更新。改端口前请先确认目标端口没有被系统保留（Windows 上 `netsh int ipv4 show excludedportrange protocol=tcp`），必要时用 `IM_HTTP_PORT` / `SETUP_PORT` 覆盖。
+
 ## [v1.0.0] - 2026-10-01
 
 首个正式版本：一个可运行、可阅读的即时通讯 / 客服系统。
