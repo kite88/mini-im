@@ -3,6 +3,8 @@ package route
 
 import (
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -10,6 +12,7 @@ import (
 	"mini-im/api/handler"
 	"mini-im/api/middleware"
 	"mini-im/conf"
+	"mini-im/setup"
 	"mini-im/ws"
 )
 
@@ -40,6 +43,9 @@ func Register(r *gin.Engine, hub *ws.Hub) {
 			"connCount": hub.ConnCount(),
 		})
 	})
+
+	// 配置完成后访问 /setup 给出「服务运行正常」的反馈页，而不是 404
+	r.GET("/setup", setup.DoneHandler(&conf.C, hasWebApp(webDir)))
 
 	// WebSocket
 	r.GET("/ws", ws.Handler(hub))
@@ -74,4 +80,11 @@ func Register(r *gin.Engine, hub *ws.Hub) {
 			authorized.DELETE("/blacklist/:UID", handler.RemoveBlacklist)
 		}
 	}
+}
+
+// hasWebApp 判断前端目录里是否有可用页面（index.html）。
+// 它决定 /setup 完成页是否给出首页入口：页面与接口同源时才成立。
+func hasWebApp(dir string) bool {
+	st, err := os.Stat(filepath.Join(dir, "index.html"))
+	return err == nil && !st.IsDir()
 }

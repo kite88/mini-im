@@ -1,0 +1,64 @@
+# =============================================================
+# mini-im 配置模板（config.example.yaml）
+#
+# 使用方式：复制为 config.yaml 后按实际环境修改
+#   Copy-Item config.example.yaml config.yaml     # PowerShell
+#   cp config.example.yaml config.yaml            # Linux / macOS
+#
+# 本文件同时是初始化向导写回配置时的底稿：首次启动若未检测到 config.yaml，
+# 服务会自动进入初始化向导（浏览器打开 http://localhost:8280/setup），
+# 向导按本文件的注释与排版渲染并写出 config.yaml；
+# 想重新配置可设置环境变量 SETUP_FORCE=1（原配置会备份为 .bak）。
+#
+# 说明：
+#   - 配置文件缺失时进入初始化向导，不再静默使用内置默认值；
+#   - 除 seed.* 外的配置都能用 IM_* 环境变量覆盖（优先级高于本文件）；
+#   - 修改配置后需要重启后端才生效。
+# =============================================================
+
+# 应用基础配置
+app:
+  name: "mini-im"           # 应用名，同时作为 Redis key 前缀；改它等于换一套缓存命名空间
+                            # （该字段不出现在向导表单里，只由本文件维护）
+  http_port: 8280           # HTTP 监听端口
+  run_mode: "release"       # debug | release | test
+  web_dir: "web"            # 前端静态资源目录（不进表单，与可执行文件同目录即可）
+
+# PostgreSQL 数据库
+postgres:
+  host: "127.0.0.1"
+  port: 5432
+  user: "postgres"
+  password: "123456"        # 与 docker-compose.yml 中的 POSTGRES_PASSWORD 保持一致
+  dbname: "mini-im"         # 库需提前创建，服务只建表不建库
+  sslmode: "disable"        # disable | require | verify-full
+  timezone: "Asia/Shanghai" # 该字段不进表单，默认 Asia/Shanghai
+
+# Redis（缓存 / 单点登录 / 在线状态 / 消息队列）
+redis:
+  addr: "127.0.0.1:6379"    # host:port，本服务的必需组件
+  password: ""              # 无密码留空
+  db: 1                     # Redis 逻辑库编号
+
+# JWT
+jwt:
+  secret: "mini-im-dev-secret"   # 必填。生产环境务必换成随机长字符串；
+                                 # 修改后已签发的 token 全部失效
+  expire: 604800            # token 有效期（秒），默认 7 天
+
+# 雪花 ID（用户表 / 好友申请表主键；消息表主键是 UUID v7，不含节点号）
+# 多实例部署时必须保证各实例 node_id 不同，取值 0~1023；-1 表示按本机网卡地址自动推导
+# （该字段不进表单，只由本文件维护）
+snowflake:
+  node_id: -1
+
+# 初始化演示数据（仅当账号不存在时写入）
+# 账号列表 accounts 不进表单，按本文件的值写入
+seed:
+  enabled: false            # 设为 true 时下面 password 必填
+  password: "123123"        # 演示账号的统一密码
+  accounts:
+    - { username: ha1234,  nickname: 客服小哈 }
+    - { username: wu1234,  nickname: 客服小吴 }
+    - { username: zhu333,  nickname: 客服小朱 }
+    - { username: for505,  nickname: 客服505 }

@@ -3,13 +3,16 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 	// 内嵌 IANA 时区数据库：CGO_ENABLED=0 交叉编译出的归档，在没装 Go、
@@ -22,19 +25,31 @@ import (
 	"mini-im/api/middleware"
 	"mini-im/conf"
 	"mini-im/db"
+	"mini-im/pkg/port"
 	"mini-im/pkg/snowflake"
 	"mini-im/route"
 	"mini-im/service"
+	"mini-im/setup"
 	"mini-im/task"
 	"mini-im/ws"
 )
+
+// configTemplate 配置模板，用作初始化向导写入配置文件时的底稿（保留注释与排版）
+//
+//go:embed config.example.yaml
+var configTemplate []byte
 
 func main() {
 	configPath := flag.String("c", "config.yaml", "配置文件路径")
 	flag.Parse()
 
-	if err := conf.Init(*configPath); err != nil {
-		log.Fatalf("加载配置失败: %v", err)
+	// 配置文件缺失，或显式设置 SETUP_FORCE 时先跑初始化向导。
+	// 注意 SETUP_FORCE 必须独立于加载结果判断：配置本身是好的，只是想重新配置。
+	force := isTruthy(os.Getenv("SETUP_FORCE"))
+	if err := conf.Init(*configPath); err != nil || force {
+		if err := loadOrSetup(*configPath, err, force); err != nil {
+			log.Fatalf("%v", err)
+		}
 	}
 
 	cfg := conf.C
@@ -78,7 +93,10 @@ func main() {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("HTTP 服务异常退出: %v", err)
+			// 端口被系统保留 / 被占用时，原始错误只是一句「权限不足」，
+			// 这里补上换端口的具体做法
+			log.Fatalf("HTTP 服务异常退出: %v",
+				port.ListenError(strconv.Itoa(cfg.App.HTTPPort), "IM_HTTP_PORT", err))
 		}
 	}()
 	log.Printf("HTTP 服务已就绪: http://127.0.0.1:%d/web/index.html", cfg.App.HTTPPort)
@@ -106,4 +124,64 @@ func ginMode(mode string) string {
 	default:
 		return gin.DebugMode
 	}
+}
+
+// loadOrSetup 处理「配置缺失」与「强制重配」两种情形：
+// 先启动初始化配置向导，待配置文件写入完成后重新加载，再由调用方按正常流程启动。
+//
+// 只在配置文件不存在（loadErr 为 ErrConfigNotFound），或调用方判定 SETUP_FORCE 生效时
+// 进入；其余加载错误（格式非法等）直接返回给调用方报错退出，
+// 免得把「配置写坏了」误当成「需要重新配置」。
+func loadOrSetup(path string, loadErr error, force bool) error {
+	notFound := errors.Is(loadErr, conf.ErrConfigNotFound)
+	if !notFound && loadErr != nil && !force {
+		return loadErr
+	}
+	if !notFound && loadErr != nil {
+		log.Printf("现有配置存在问题（SETUP_FORCE 已开启，将在向导中重新配置）：%v", loadErr)
+	}
+
+	// 预填表单：首次启动用模板里的示例值，强制重配时用当前生效的配置
+	// （Sanitize 会清掉密码与密钥，不回显到页面上）
+	prefill := &conf.Config{}
+	if notFound {
+		if parsed, perr := conf.Parse(configTemplate); perr == nil {
+			prefill = parsed
+		}
+	} else {
+		current := conf.C
+		prefill = current.Sanitize()
+	}
+
+	if err := setup.Run(setup.Options{
+		Template:   configTemplate,
+		Prefill:    prefill.Sanitize(),
+		Port:       setupPort(),
+		ConfigPath: path,
+		Force:      force,
+	}); err != nil {
+		return err
+	}
+
+	if err := conf.Init(path); err != nil {
+		return fmt.Errorf("初始化配置已写入，但加载失败：%w", err)
+	}
+	return nil
+}
+
+// setupPort 初始化向导自身的监听端口：SETUP_PORT 环境变量优先，默认 8280
+// （此时还没有可用配置，无法从配置里读端口）。
+func setupPort() string {
+	if v := strings.TrimSpace(os.Getenv("SETUP_PORT")); v != "" {
+		return v
+	}
+	return "8280"
+}
+
+func isTruthy(v string) bool {
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "1", "true", "yes", "on":
+		return true
+	}
+	return false
 }

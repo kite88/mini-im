@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mini-im 运行状态</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: rgba(22, 28, 48, 0.86);
+      --line: rgba(255, 255, 255, 0.09);
+      --text: #e8ecf8;
+      --muted: #93a0c0;
+      --accent: #6366f1;
+      --accent-2: #22d3ee;
+      --ok: #34d399;
+      --err: #f87171;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font: 14px/1.6 "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      padding: 40px 20px;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(60% 45% at 12% 0%, rgba(99, 102, 241, .28), transparent 60%),
+        radial-gradient(50% 40% at 90% 8%, rgba(34, 211, 238, .18), transparent 60%);
+      pointer-events: none;
+    }
+
+    .wrap {
+      position: relative;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 22px;
+    }
+
+    .logo {
+      width: 46px;
+      height: 46px;
+      flex: 0 0 46px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      box-shadow: 0 10px 30px rgba(99, 102, 241, .35);
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 20px;
+    }
+
+    .sub {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 22px;
+      backdrop-filter: blur(8px);
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .tick {
+      width: 48px;
+      height: 48px;
+      flex: 0 0 48px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      color: #062e21;
+      background: linear-gradient(135deg, #6ee7b7, #34d399);
+      box-shadow: 0 10px 26px rgba(52, 211, 153, .3);
+      transition: background .2s;
+    }
+
+    .tick.wait {
+      color: #3a2a00;
+      background: linear-gradient(135deg, #fde68a, #fbbf24);
+      box-shadow: 0 10px 26px rgba(251, 191, 36, .28);
+    }
+
+    .tick.bad {
+      color: #3a0d0d;
+      background: linear-gradient(135deg, #fca5a5, #f87171);
+      box-shadow: 0 10px 26px rgba(248, 113, 113, .28);
+    }
+
+    .status h2 {
+      margin: 0 0 3px;
+      font-size: 17px;
+    }
+
+    .hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+
+    .kv {
+      margin-top: 16px;
+      font-size: 13px;
+    }
+
+    .kv>div {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      padding: 7px 0;
+    }
+
+    .kv span {
+      flex: 0 0 96px;
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+
+    code {
+      font-family: ui-monospace, Consolas, "Cascadia Mono", monospace;
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 2px 7px;
+      font-size: 12.5px;
+      color: #c7d2fe;
+      word-break: break-all;
+    }
+
+    code.copyable {
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+
+    code.copyable:hover {
+      border-color: rgba(99, 102, 241, .6);
+      background: rgba(99, 102, 241, .16);
+    }
+
+    .copied {
+      color: var(--ok);
+      font-size: 12px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    button,
+    .btn {
+      font: inherit;
+      font-size: 13px;
+      border-radius: 9px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .06);
+      color: var(--text);
+      padding: 8px 16px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background .15s;
+    }
+
+    button:hover,
+    .btn:hover {
+      background: rgba(255, 255, 255, .13);
+    }
+
+    /* 首页是配置完成后最该点的一个动作，给它主色，和「重新检查」拉开层级 */
+    .btn.primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-color: transparent;
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 8px 22px rgba(99, 102, 241, .3);
+    }
+
+    .btn.primary:hover {
+      filter: brightness(1.08);
+    }
+
+    .btn.sm {
+      align-self: center;
+      padding: 4px 12px;
+      font-size: 12px;
+      box-shadow: none;
+    }
+
+    .tip {
+      margin: 18px 0 0;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <div class="logo">IM</div>
+      <div>
+        <h1>mini-im</h1>
+        <p class="sub" id="subLine">{{SUBTITLE}}</p>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="status">
+        <span class="tick wait" id="tick">…</span>
+        <div>
+          <h2 id="headline">正在检查服务状态…</h2>
+          <p class="hint" id="healthLine">GET /healthz</p>
+        </div>
+      </div>
+
+      <div class="kv">
+        <div><span>配置文件</span><code class="copyable" id="cfgPath" title="点击复制">{{CONFIG_PATH}}</code></div>
+        <div><span>监听端口</span><code>{{PORT}}</code></div>
+        <div><span>运行模式</span><code>{{MODE}}</code></div>
+        <div><span>在线连接</span><code id="connState">检查中…</code></div>
+        {{HOME_ROW}}
+        {{BACKUP_ROW}}
+      </div>
+
+      <div class="actions">
+        <button type="button" id="btnCheck">重新检查</button>
+        <a class="btn" href="/healthz" target="_blank" rel="noreferrer">打开 /healthz</a>
+      </div>
+
+      <p class="tip">
+        需要重新生成配置时：删除上面这个配置文件，或设置环境变量 <code>SETUP_FORCE=1</code> 后重启服务，再访问本页面即可进入初始化向导。
+      </p>
+    </section>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    async function copyText(text) {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          ta.style.position = "fixed";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+        }
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    // 所有 .copyable 元素（配置文件路径、页面同源模式下的首页地址）都支持点击复制。
+    document.querySelectorAll(".copyable").forEach((el) => {
+      el.addEventListener("click", async () => {
+        const ok = await copyText(el.textContent.trim());
+        let tag = el.nextElementSibling;
+        if (!tag || !tag.classList.contains("copied")) {
+          tag = document.createElement("span");
+          tag.className = "copied";
+          el.after(tag);
+        }
+        tag.textContent = ok ? " 已复制 ✓" : " 复制失败，请手动选择";
+        clearTimeout(tag.timer);
+        tag.timer = setTimeout(() => { if (tag.parentNode) tag.parentNode.removeChild(tag); }, 1800);
+      });
+    });
+
+    async function check() {
+      const tick = $("tick");
+      tick.className = "tick wait";
+      tick.textContent = "…";
+      $("headline").textContent = "正在检查服务状态…";
+      $("healthLine").textContent = "GET /healthz";
+      $("connState").textContent = "检查中…";
+
+      const at = new Date().toLocaleTimeString();
+      try {
+        const res = await fetch("/healthz", { cache: "no-store" });
+        const data = await res.json();
+        const ok = res.ok && data.status === "ok";
+        tick.className = "tick" + (ok ? "" : " bad");
+        tick.textContent = ok ? "✓" : "!";
+        $("headline").textContent = ok ? "服务运行正常" : "服务状态异常";
+        $("healthLine").textContent = "健康检查：" + (ok ? "通过" : "失败") + " · " + at;
+        // /healthz 返回当前 WebSocket 在线连接数
+        $("connState").textContent = ok ? (data.connCount + " 条 WebSocket 连接") : "未知";
+      } catch (e) {
+        tick.className = "tick bad";
+        tick.textContent = "!";
+        $("headline").textContent = "无法访问服务";
+        $("healthLine").textContent = e.message + " · " + at;
+        $("connState").textContent = "未知";
+      }
+    }
+
+    $("btnCheck").addEventListener("click", check);
+    check();
+  </script>
+</body>
+
+</html>

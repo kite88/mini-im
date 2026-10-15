@@ -1,0 +1,998 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mini-im 初始化配置</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: rgba(22, 28, 48, 0.86);
+      --line: rgba(255, 255, 255, 0.09);
+      --text: #e8ecf8;
+      --muted: #93a0c0;
+      --accent: #6366f1;
+      --accent-2: #22d3ee;
+      --ok: #34d399;
+      --warn: #fbbf24;
+      --err: #f87171;
+      --radius: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font: 16px/1.6 "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      padding: 32px 20px 120px;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(60% 45% at 12% 0%, rgba(99, 102, 241, .28), transparent 60%),
+        radial-gradient(50% 40% at 90% 8%, rgba(34, 211, 238, .18), transparent 60%);
+      pointer-events: none;
+    }
+
+    .wrap {
+      position: relative;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 24px;
+    }
+
+    .logo {
+      width: 46px;
+      height: 46px;
+      flex: 0 0 46px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      letter-spacing: .5px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      box-shadow: 0 10px 30px rgba(99, 102, 241, .35);
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 23px;
+      letter-spacing: .2px;
+    }
+
+    .sub {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    code {
+      font-family: ui-monospace, Consolas, "Cascadia Mono", monospace;
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 1px 6px;
+      font-size: 14.5px;
+      color: #c7d2fe;
+      word-break: break-all;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px 18px 20px;
+      backdrop-filter: blur(8px);
+    }
+
+    .card.span2 {
+      grid-column: 1 / -1;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .card-head h2 {
+      margin: 0;
+      font-size: 17px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 14.5px;
+      margin: 0 0 14px;
+    }
+
+    .fields {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .fields.rows {
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .field>input,
+    .field>select,
+    .field>.inline {
+      margin-top: auto;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 14.5px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tip {
+      color: var(--muted);
+      font-size: 14px;
+      opacity: .72;
+      font-weight: 400;
+    }
+
+    input,
+    select {
+      width: 100%;
+      background: rgba(10, 14, 28, .75);
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      color: var(--text);
+      padding: 9px 11px;
+      font: inherit;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: rgba(99, 102, 241, .8);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, .18);
+    }
+
+    input:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .mono {
+      font-family: ui-monospace, Consolas, "Cascadia Mono", monospace;
+      font-size: 15px;
+    }
+
+    .inline {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    button {
+      font: inherit;
+      border-radius: 9px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .06);
+      color: var(--text);
+      padding: 9px 14px;
+      cursor: pointer;
+      transition: background .15s, border-color .15s, transform .1s;
+      white-space: nowrap;
+    }
+
+    button:hover:not(:disabled) {
+      background: rgba(255, 255, 255, .12);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      border-color: transparent;
+      font-weight: 600;
+      padding: 11px 22px;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, .35);
+    }
+
+    button.ghost {
+      font-size: 14.5px;
+      padding: 6px 12px;
+      color: var(--muted);
+    }
+
+    button.test {
+      font-size: 14.5px;
+      padding: 6px 12px;
+      border-color: transparent;
+      background: #2563eb;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    button.test:hover:not(:disabled) {
+      background: #1d4ed8;
+    }
+
+    .switch {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 15px;
+      cursor: pointer;
+      user-select: none;
+      color: var(--text);
+    }
+
+    .switch input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .badge {
+      font-size: 13px;
+      padding: 1px 7px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .badge.required {
+      color: #c7d2fe;
+      border-color: rgba(99, 102, 241, .5);
+      background: rgba(99, 102, 241, .14);
+    }
+
+    .badge.optional {
+      color: #a5f3fc;
+      border-color: rgba(34, 211, 238, .4);
+      background: rgba(34, 211, 238, .12);
+    }
+
+    .msg {
+      margin-top: 10px;
+      font-size: 14.5px;
+      color: var(--muted);
+      min-height: 18px;
+      word-break: break-all;
+    }
+
+    .msg.ok {
+      color: var(--ok);
+    }
+
+    .msg.err {
+      color: var(--err);
+    }
+
+    .msg.warn {
+      color: var(--warn);
+    }
+
+    .alert {
+      border-radius: var(--radius);
+      padding: 13px 16px;
+      margin-bottom: 16px;
+      font-size: 15px;
+      border: 1px solid;
+      white-space: pre-line;
+    }
+
+    .alert.info {
+      border-color: rgba(99, 102, 241, .45);
+      background: rgba(99, 102, 241, .12);
+      color: #dbe1ff;
+    }
+
+    .alert.err {
+      border-color: rgba(248, 113, 113, .45);
+      background: rgba(248, 113, 113, .12);
+      color: #ffe1e1;
+    }
+
+    .alert.warn {
+      border-color: rgba(251, 191, 36, .45);
+      background: rgba(251, 191, 36, .12);
+      color: #fff3d1;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* 遮罩铺满视口并压暗下面的表单；点遮罩可关闭，
+       但 ESC 不关 —— 服务正在启动，误触会把进行中的状态打断。 */
+    .mask {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(4, 7, 15, .72);
+      backdrop-filter: blur(3px);
+      overflow: auto;
+    }
+
+    .mask .done-card {
+      width: min(440px, 100%);
+      padding: 8px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .5);
+      animation: pop .18s ease-out;
+    }
+
+    @keyframes pop {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(.98);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .mask .done-card {
+        animation: none;
+      }
+    }
+
+    .bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(9, 13, 26, .92);
+      border-top: 1px solid var(--line);
+      backdrop-filter: blur(10px);
+      padding: 14px 20px;
+    }
+
+    .bar-inner {
+      max-width: 980px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .bar-inner .note {
+      color: var(--muted);
+      font-size: 14.5px;
+    }
+
+    .done {
+      text-align: center;
+      padding: 46px 24px 40px;
+    }
+
+    .done .tick {
+      width: 62px;
+      height: 62px;
+      margin: 0 auto 18px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 32px;
+      color: #062e21;
+      background: linear-gradient(135deg, #6ee7b7, #34d399);
+      box-shadow: 0 12px 34px rgba(52, 211, 153, .35);
+    }
+
+    .done h2 {
+      margin: 0 0 10px;
+      font-size: 22px;
+    }
+
+    .done p {
+      margin: 0 0 8px;
+      color: var(--muted);
+    }
+
+    .done .link {
+      color: var(--text);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      word-break: break-all;
+    }
+
+    .done .link:hover {
+      color: var(--accent-2);
+    }
+
+    /* 启动流程日志 */
+    .log {
+      text-align: left;
+      max-width: 620px;
+      margin: 22px auto 0;
+      background: rgba(8, 12, 24, .72);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-family: ui-monospace, Consolas, "Cascadia Mono", monospace;
+      font-size: 14.5px;
+      line-height: 1.9;
+      color: var(--muted);
+    }
+
+    .log div::before {
+      content: "› ";
+      color: var(--accent-2);
+    }
+
+    .log div.ok {
+      color: var(--ok);
+    }
+
+    .log div.pending {
+      color: var(--warn);
+    }
+
+    .log div.err {
+      color: var(--err);
+    }
+
+    .copied {
+      color: var(--ok);
+      font-size: 14px;
+    }
+
+    @media (max-width: 720px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      body {
+        padding: 20px 14px 130px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <div class="logo">IM</div>
+      <div>
+        <h1>mini-im 初始化配置</h1>
+        <p class="sub">
+          检测到这是首次启动。填写完成后配置会写入 <code id="cfgPath">config.yaml</code>，服务随即自动启动。
+        </p>
+      </div>
+    </header>
+
+    <div id="alert" class="alert hidden"></div>
+
+    <form id="form" class="grid" autocomplete="off">
+      <section class="card">
+        <div class="card-head">
+          <h2>服务与安全<span class="badge required">必填</span></h2>
+        </div>
+        <div class="fields">
+          <div class="field">
+            <label>HTTP 端口 http_port <span class="tip">如 8280</span></label>
+            <input id="httpPort" type="number">
+          </div>
+          <div class="field">
+            <label>运行模式 run_mode <span class="tip">默认 release</span></label>
+            <select id="runMode">
+              <option value="release">release（默认，推荐）</option>
+              <option value="debug">debug</option>
+              <option value="test">test</option>
+            </select>
+          </div>
+          <div class="field full">
+            <label>JWT 密钥 jwt.secret <span class="tip">可点击右侧按钮生成</span></label>
+            <div class="inline">
+              <input class="mono" id="jwtSecret">
+              <button type="button" class="ghost" data-gen="jwtSecret">随机生成</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>token 有效期 jwt.expire <span class="tip">秒，如 604800（7 天）</span></label>
+            <input id="jwtExpire" type="number">
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>数据库（PostgreSQL）<span class="badge required">必填</span></h2>
+          <button type="button" class="test" data-test="postgres">测试连接</button>
+        </div>
+        <div class="fields">
+          <div class="field">
+            <label>主机 host <span class="tip">如 127.0.0.1</span></label>
+            <input id="pgHost">
+          </div>
+          <div class="field">
+            <label>端口 port <span class="tip">如 5432</span></label>
+            <input id="pgPort" type="number">
+          </div>
+          <div class="field">
+            <label>库名 dbname <span class="tip">如 mini-im，库需提前创建</span></label>
+            <input id="pgDbname">
+          </div>
+          <div class="field">
+            <label>用户 user <span class="tip">如 postgres</span></label>
+            <input id="pgUser">
+          </div>
+          <div class="field">
+            <label>密码 password <span class="tip">数据库密码</span></label>
+            <input id="pgPassword" type="password">
+          </div>
+          <div class="field">
+            <label>sslmode</label>
+            <select id="pgSslmode">
+              <option value="disable">disable</option>
+              <option value="prefer">prefer</option>
+              <option value="require">require</option>
+            </select>
+          </div>
+        </div>
+        <div class="msg" data-msg="postgres"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h2>Redis<span class="badge required">必填</span></h2>
+          <button type="button" class="test" data-test="redis">测试连接</button>
+        </div>
+        <div class="fields">
+          <div class="field full">
+            <label>地址 addr <span class="tip">host:port，如 127.0.0.1:6379</span></label>
+            <input class="mono" id="redisAddr">
+          </div>
+          <div class="field">
+            <label>密码 password <span class="tip">无密码留空</span></label>
+            <input id="redisPassword" type="password">
+          </div>
+          <div class="field">
+            <label>逻辑库 db <span class="tip">如 1</span></label>
+            <input id="redisDb" type="number">
+          </div>
+        </div>
+        <div class="msg" data-msg="redis">
+          会话、消息投递与在线状态都依赖 Redis：连不上时服务会启动失败。
+        </div>
+      </section>
+
+      <section class="card span2">
+        <div class="card-head">
+          <h2>演示数据<span class="badge optional">可选</span></h2>
+        </div>
+        <p class="hint">
+          勾选后首次启动会写入一组两两互加好友的演示账号（账号列表取自配置模板 <code>config.example.yaml</code> 的
+          <code>seed.accounts</code>），密码取下面填的统一密码。账号已存在时只补齐昵称，不覆盖密码。
+        </p>
+        <div class="fields rows">
+          <div class="field full">
+            <label class="switch"><input type="checkbox" id="seedEnabled"> 创建演示账号</label>
+          </div>
+          <div class="field seed-field">
+            <label>统一密码 seed.password <span class="tip">演示账号共用，建议 6 位以上</span></label>
+            <input id="seedPassword" type="password">
+          </div>
+        </div>
+      </section>
+    </form>
+
+    <!-- 保存成功后的过渡提示用弹窗承载：配置写入与服务启动需要几秒到几十秒，
+         这期间表单仍留在下面（遮罩压暗），用户能看清自己刚提交了什么，
+         也能在跳转迟迟不来时关掉它手动操作。 -->
+    <div id="doneMask" class="mask hidden" role="dialog" aria-modal="true" aria-labelledby="doneTitle">
+      <div class="card done-card">
+        <div class="done">
+          <div class="tick">✓</div>
+          <h2 id="doneTitle">初始化配置完成</h2>
+          <div class="log" id="doneLog"></div>
+          <!-- 正常情况下会自动跳走，这里是给跳转失败的人留的手动出口。
+               注意不要给这个链接加 .copyable：页面里 .copyable 绑的是「点击复制」，
+               会拦掉链接本身的跳转。 -->
+          <p class="tip">
+            如果页面没有自动跳转，请手动打开
+            <a class="link" id="doneUrl" href="#" target="_blank" rel="noreferrer">服务状态页</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bar" id="bar">
+    <div class="bar-inner">
+      <span class="note" id="barNote">配置保存前会先测试数据库连接，测试通过才会写入文件。</span>
+      <div class="inline">
+        <button type="button" id="btnReset">重置表单</button>
+        <button type="button" id="btnForce" class="hidden">忽略并强制保存</button>
+        <button type="button" class="primary" id="btnSave">保存配置并启动</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const state = { prefill: null, configPath: "", setupPort: "", serverPort: "8280", force: false, readyUrl: "", cancelGoto: false };
+
+    const PLAIN_NOTE = "配置保存前会先测试数据库连接，测试通过才会写入文件。";
+
+    function toast(scope, text, type) {
+      document.querySelectorAll('[data-msg="' + scope + '"]').forEach((el) => {
+        el.textContent = text || "";
+        el.className = "msg" + (type ? " " + type : "");
+      });
+    }
+
+    function showAlert(text, type) {
+      const el = $("alert");
+      el.textContent = text;
+      el.className = "alert " + type;
+    }
+
+    function hideAlert() { $("alert").className = "alert hidden"; }
+
+    function randomSecret() {
+      const bytes = new Uint8Array(24);
+      crypto.getRandomValues(bytes);
+      return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    function fill(cfg) {
+      if (!cfg) return;
+      const a = cfg.app || {}, p = cfg.postgres || {}, r = cfg.redis || {},
+        j = cfg.jwt || {}, s = cfg.seed || {};
+      $("httpPort").value = a.http_port || 8280;
+      $("runMode").value = a.run_mode || "release";
+      $("pgHost").value = p.host || "";
+      $("pgPort").value = p.port || 5432;
+      $("pgDbname").value = p.dbname || "";
+      $("pgUser").value = p.user || "";
+      $("pgPassword").value = "";
+      $("pgSslmode").value = p.sslmode || "disable";
+      $("redisAddr").value = r.addr || "";
+      $("redisPassword").value = "";
+      $("redisDb").value = (r.db === 0 || r.db) ? r.db : 1;
+      $("jwtSecret").value = j.secret || randomSecret();
+      $("jwtExpire").value = j.expire || 604800;
+      $("seedEnabled").checked = !!s.enabled;
+      $("seedPassword").value = "";
+      syncSeed();
+    }
+
+    const num = (id) => { const v = $(id).value.trim(); return v === "" ? 0 : Number(v); };
+    const str = (id) => $(id).value.trim();
+
+    function collect() {
+      return {
+        app: { http_port: num("httpPort"), run_mode: $("runMode").value },
+        postgres: {
+          host: str("pgHost"), port: num("pgPort"), user: str("pgUser"),
+          password: $("pgPassword").value, dbname: str("pgDbname"), sslmode: $("pgSslmode").value
+        },
+        redis: { addr: str("redisAddr"), password: $("redisPassword").value, db: num("redisDb") },
+        jwt: { secret: str("jwtSecret"), expire: num("jwtExpire") },
+        // seed.accounts 不在表单里，服务端按配置模板补齐
+        seed: { enabled: $("seedEnabled").checked, password: $("seedPassword").value }
+      };
+    }
+
+    function validate() {
+      const cfg = collect(), problems = [];
+      if (!(cfg.app.http_port > 0 && cfg.app.http_port <= 65535)) problems.push("HTTP 端口需要在 1~65535 之间");
+      if (!cfg.app.run_mode) problems.push("运行模式不能为空");
+      if (!cfg.postgres.host) problems.push("数据库 host 不能为空");
+      if (!cfg.postgres.port) problems.push("数据库 port 不能为空");
+      if (!cfg.postgres.user) problems.push("数据库 user 不能为空");
+      if (!cfg.postgres.dbname) problems.push("数据库 dbname 不能为空");
+      if (!cfg.postgres.sslmode) problems.push("数据库 sslmode 不能为空");
+      if (!cfg.redis.addr) problems.push("Redis addr 不能为空（如 127.0.0.1:6379）");
+      else if (!/^[^:]+:\d+$/.test(cfg.redis.addr)) problems.push("Redis addr 格式应为 host:port");
+      if (!cfg.jwt.secret) problems.push("JWT 密钥不能为空");
+      if (!cfg.jwt.expire) problems.push("jwt.expire 不能为空（秒，如 604800）");
+      if (cfg.seed.enabled && !cfg.seed.password) problems.push("勾选创建演示账号后，统一密码不能为空");
+      return problems;
+    }
+
+    function syncSeed() {
+      const on = $("seedEnabled").checked;
+      document.querySelectorAll(".seed-field input").forEach((el) => { el.disabled = !on; });
+      $("seedEnabled").closest(".card").style.opacity = on ? "1" : ".82";
+    }
+
+    async function post(url, body) {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      return res.json();
+    }
+
+    async function test(scope) {
+      toast(scope, scope === "postgres" ? "正在测试数据库连接…" : "正在测试 Redis 连接…");
+      try {
+        const cfg = collect();
+        const payload = scope === "postgres" ? cfg.postgres : cfg.redis;
+        const r = await post("/api/setup/test/" + scope, payload);
+        toast(scope, (r.ok ? "✓ " : "✗ ") + r.message + (r.detail ? " · " + r.detail : "") +
+          (r.latencyMs ? " · " + r.latencyMs + "ms" : ""), r.ok ? "ok" : "err");
+        return r.ok;
+      } catch (e) {
+        toast(scope, "请求失败：" + e.message, "err");
+        return false;
+      }
+    }
+
+    async function save(force) {
+      const problems = validate();
+      if (problems.length) {
+        showAlert("请先修正以下问题：\n· " + problems.join("\n· "), "err");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+      hideAlert();
+      setBusy(true, "正在校验并写入配置…");
+      try {
+        const r = await post("/api/setup/save", { config: collect(), force: !!force });
+        if (!r.ok) {
+          showAlert(r.error + (r.canForce ? "\n\n可点击「忽略并强制保存」继续（例如数据库暂未就绪）。" : ""), "err");
+          if (r.canForce) $("btnForce").classList.remove("hidden");
+          setBusy(false);
+          return;
+        }
+        renderDone(r);
+        // 提醒要写在弹窗的日志区里：renderDone 会清掉顶部 alert，
+        // 而随后弹窗会盖住表单，写在 alert 上根本看不到。
+        (r.warnings || []).forEach((w) => logLine("提醒：" + w, "pending"));
+      } catch (e) {
+        showAlert("保存失败：" + e.message, "err");
+        setBusy(false);
+      }
+    }
+
+    function setBusy(busy, text) {
+      $("btnSave").disabled = busy;
+      $("btnReset").disabled = busy;
+      $("barNote").textContent = busy && text ? text : PLAIN_NOTE;
+    }
+
+    // 保存成功后不再自己渲染一张「完成页」——那种形态和之后访问 /setup 看到的服务状态页
+    // 是两套东西，用户会以为进了两个系统。这里只做过渡：等业务服务就绪后把浏览器
+    // 交给它，由业务服务的 /setup（setup/done.html）渲染唯一的完成页。
+    function renderDone(res) {
+      if (res.serverPort) state.serverPort = String(res.serverPort);
+      hideAlert();
+      $("doneMask").classList.remove("hidden");
+
+      // 目标页 = 业务服务的 /setup。原配置备份路径通过 query 带过去，
+      // 只在那一次跳转的页面上多显示一行，刷新即消失。
+      const target = doneUrl(res.backupPath || "");
+      state.readyUrl = target;
+      const link = $("doneUrl");
+      link.href = target;
+      link.textContent = target;
+
+      $("doneLog").innerHTML = "";
+      logLine("配置已写入文件，正在启动业务服务……");
+      pollHealth();
+    }
+
+    // 关掉弹窗：表单仍在原处，只是底部操作条改成提示「服务正在启动」。
+    // 关掉 = 用户想自己看，于是取消还没到点的自动跳转（轮询本身继续跑）。
+    function closeDone() {
+      $("doneMask").classList.add("hidden");
+      state.cancelGoto = true;
+      // 配置已经保存，此时再点一次「保存配置并启动」只会重复触发一次初始化，
+      // 所以关掉后按钮保持禁用，只留提示
+      setBusy(false, "");
+      $("btnSave").disabled = true;
+      $("btnReset").disabled = true;
+      $("barNote").textContent = "配置已保存，业务服务正在启动，可打开 " + state.readyUrl + " 查看状态。";
+    }
+
+    // 业务服务 /setup 的地址：沿用当前协议与主机名，只换端口，
+    // 这样经局域网 IP / 反代访问时也不会跳到 localhost。
+    // fresh=1 让落地页知道「刚配好」（副标题不同），backup 带上旧配置的备份路径。
+    function doneUrl(backup) {
+      const q = ["fresh=1"];
+      if (backup) q.push("backup=" + encodeURIComponent(backup));
+      return location.protocol + "//" + (location.hostname || "localhost") +
+        ":" + state.serverPort + "/setup?" + q.join("&");
+    }
+
+    const escapeHtml = (s) => String(s).replace(/[&<>"']/g,
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+    async function copyText(text) {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          // 非安全上下文（如通过局域网 IP 访问）退化为 execCommand
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          ta.style.position = "fixed";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+        }
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function logLine(html, cls) {
+      const line = document.createElement("div");
+      if (cls) line.className = cls;
+      line.innerHTML = html;
+      $("doneLog").appendChild(line);
+      return line;
+    }
+
+    // 点击日志中的地址即可复制，并在其后短暂提示
+    async function copyUrl(el) {
+      const text = (el && el.textContent ? el.textContent : state.readyUrl).trim();
+      const ok = await copyText(text);
+      let tag = el.nextElementSibling;
+      if (!tag || !tag.classList.contains("copied")) {
+        tag = document.createElement("span");
+        tag.className = "copied";
+        el.after(tag);
+      }
+      tag.textContent = ok ? " 已复制 ✓" : " 复制失败，请手动选择";
+      clearTimeout(copyUrl.timer);
+      copyUrl.timer = setTimeout(() => {
+        if (tag.parentNode) tag.parentNode.removeChild(tag);
+      }, 1800);
+    }
+
+    // 服务就绪后到自动跳转之间的停顿：要留出读完弹窗里那几行日志的时间，
+    // 并把剩余时间显示出来 —— 静默停顿会让人以为页面卡住了。
+    const AUTO_GOTO_MS = 3500;
+
+    async function autoGoto() {
+      const until = Date.now() + AUTO_GOTO_MS;
+      const line = logLine("", "ok");
+      while (Date.now() < until) {
+        if (state.cancelGoto) {
+          line.innerHTML = "已取消自动跳转，服务状态页：";
+          const a = document.createElement("a");
+          a.className = "link";
+          a.id = "canceledUrl";
+          a.href = state.readyUrl;
+          a.textContent = state.readyUrl;
+          line.appendChild(a);
+          return;
+        }
+        const left = (Math.max(0, until - Date.now()) / 1000).toFixed(1);
+        line.textContent = "服务已启动，" + left + " 秒后自动打开状态页…";
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      location.replace(state.readyUrl);
+    }
+
+    function healthUrl() {
+      return location.protocol + "//" + (location.hostname || "localhost") +
+        ":" + state.serverPort + "/healthz";
+    }
+
+    // 启动流程：配置已写入 -> 等待 healthz 就绪 -> 跳转业务服务的 /setup
+    async function pollHealth() {
+      const health = healthUrl();
+      logLine('等待服务就绪 <code class="copyable" title="点击复制">' +
+        escapeHtml(health) + "</code>");
+      const deadline = Date.now() + 30000;
+      while (Date.now() < deadline) {
+        try {
+          const res = await fetch(health, { cache: "no-store" });
+          const data = await res.json();
+          if (res.ok && data.status === "ok") {
+            await autoGoto();
+            return;
+          }
+        } catch (e) { /* 服务尚未就绪，继续重试 */ }
+        await new Promise((r) => setTimeout(r, 800));
+      }
+      // 超时不是失败：业务服务可能还在跑首次迁移，也可能这次启动就失败了。
+      // 两种情况都由用户自己点上面的链接去看，不在这里下结论。
+      logLine("等待超时，请手动打开上面的地址确认服务状态", "pending");
+    }
+
+    document.querySelectorAll("[data-test]").forEach((btn) => {
+      btn.addEventListener("click", () => test(btn.dataset.test));
+    });
+    document.querySelectorAll("[data-gen]").forEach((btn) => {
+      btn.addEventListener("click", () => { $(btn.dataset.gen).value = randomSecret(); });
+    });
+    $("seedEnabled").addEventListener("change", syncSeed);
+    $("doneLog").addEventListener("click", (e) => {
+      const el = e.target.closest(".copyable");
+      if (el) copyUrl(el);
+    });
+    // 点遮罩空白处关闭弹窗；点对话框内部不算（事件目标是 mask 自身时才关）
+    $("doneMask").addEventListener("click", (e) => {
+      if (e.target === $("doneMask")) closeDone();
+    });
+    $("btnSave").addEventListener("click", () => save(false));
+    $("btnReset").addEventListener("click", () => { hideAlert(); fill(state.prefill); });
+    $("btnForce").addEventListener("click", () => save(true));
+
+    (async function init() {
+      try {
+        const res = await fetch("/api/setup/state", { cache: "no-store" });
+        const st = await res.json();
+        state.prefill = st.prefill;
+        state.configPath = st.configPath;
+        state.setupPort = st.setupPort;
+        state.force = st.forced;
+        if (st.serverPort) state.serverPort = String(st.serverPort);
+        $("cfgPath").textContent = st.configPath;
+        fill(st.prefill);
+        if (st.forced) {
+          showAlert("已开启强制重新配置（SETUP_FORCE=1）：保存后原配置文件会备份为 config.yaml.bak。\n出于安全考虑，密码与密钥需要重新填写。", "info");
+        } else if (st.existing) {
+          showAlert("检测到已存在配置文件，保存时会先备份为 config.yaml.bak。", "warn");
+        }
+      } catch (e) {
+        showAlert("无法读取向导状态：" + e.message, "err");
+      }
+    })();
+  </script>
+</body>
+
+</html>
