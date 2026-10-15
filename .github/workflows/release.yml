@@ -34,11 +34,42 @@ jobs:
         run: go vet ./...
 
       - name: 交叉编译全部平台
-        run: ./build.sh
+        # 显式传标签作为版本号：CI 里 git describe 依赖抓取深度，不如直接给
+        run: ./build.sh -v "${GITHUB_REF_NAME}"
 
       - name: 校验产物
         working-directory: dist
-        run: sha256sum -c checksums.txt
+        run: |
+          set -euo pipefail
+          sha256sum -c checksums.txt
+
+          # 归档名必须带当前标签，否则发出去的包分不清是哪个版本
+          tag="${GITHUB_REF_NAME}"
+          for f in *.zip *.tar.gz; do
+            case "$f" in
+              *"$tag"*) ;;
+              *) echo "归档名缺少版本号 $tag: $f" >&2; exit 1 ;;
+            esac
+          done
+
+          # 解开两个代表性归档，逐项检查内容是否完整（缺页面或配置模板就是残包）
+          check_dir() {
+            local dir=$1
+            test "$(cat "$dir/version.txt")" = "$tag" || {
+              echo "version.txt 与标签不一致: $(cat "$dir/version.txt")" >&2; exit 1; }
+            for f in web/index.html config.example.yaml README.md README.en.md LICENSE; do
+              test -f "$dir/$f" || { echo "包内缺少 $dir/$f" >&2; exit 1; }
+            done
+            # 包内不该带开发用的 config.yaml（它会带着默认 JWT 密钥发出去）
+            test ! -e "$dir/config.yaml" || { echo "包内不该有 config.yaml" >&2; exit 1; }
+          }
+
+          tar -xzf "mini-im-${tag}-linux-amd64.tar.gz"
+          check_dir "mini-im-${tag}-linux-amd64"
+          unzip -q "mini-im-${tag}-windows-amd64.zip"
+          check_dir "mini-im-${tag}-windows-amd64"
+
+          echo "产物自检通过：$tag"
 
       - name: 创建或更新 Release
         env:
@@ -53,7 +84,7 @@ jobs:
             notes_args=(--notes-file "$notes_file")
             auto_args=()
           else
-            notes_args=(--notes "Linux / macOS 用户下载 .tar.gz，Windows 用户下载 .zip，解压后即为可运行目录（可执行文件 + config.yaml + web/），跨平台归档均为 CGO_ENABLED=0 静态编译。checksums.txt 是全部归档的 SHA256，可用 sha256sum -c 校验。")
+            notes_args=(--notes "Linux / macOS 用户下载 .tar.gz，Windows 用户下载 .zip，解压后即为可运行目录（可执行文件 + config.example.yaml + web/）。首次启动目录里没有 config.yaml，会先进入初始化配置向导：浏览器打开 http://localhost:8280/setup 填写数据库 / Redis 并保存，服务随即自动启动。跨平台归档均为 CGO_ENABLED=0 静态编译。checksums.txt 是全部归档的 SHA256，可用 sha256sum -c 校验。")
             auto_args=(--generate-notes)
           fi
 
