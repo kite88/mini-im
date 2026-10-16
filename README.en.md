@@ -33,9 +33,9 @@ The same page adapts responsively to desktop and mobile, with no bundler and no 
 
 ## UI preview
 
-> Every screenshot below was taken with the demo accounts created by the `seed` section of `config.yaml`
-> (客服小哈 / 客服小吴 / 客服小朱 / 客服505). Set `seed.enabled` to `true` and restart to get the exact
-> same starting data.
+> Every screenshot below was taken with the demo accounts created by the `seed` section of
+> `config.example.yaml` (Mini-IM No. 1 / Xiaoha / Xiaowu / Xiaozhu / GoForIt). Set `seed.enabled` to
+> `true` and restart to get the exact same starting data.
 
 ### Desktop
 
@@ -70,6 +70,7 @@ go run .                      # start the service
 
 > With no `config.yaml` present, mini-im enters the [setup wizard](#setup-wizard) first: open
 > <http://localhost:8280/setup>, fill in the database / Redis and save — the service then starts by itself.
+> You can also `cp config.example.yaml config.yaml` and edit it before starting (`config.yaml` is a local file and is not tracked).
 
 Open <http://127.0.0.1:8280/> — it redirects to `/web/index.html`.
 When no token is present the front end sends you to `/web/login.html`; register or sign in to reach the chat page.
@@ -80,28 +81,34 @@ search by username or nickname and send a request. Once the other side accepts, 
 
 ### Demo accounts (opt-in)
 
-`seed.enabled` in `config.yaml` defaults to `false`. Set it to `true` and restart to create the accounts
+`seed.enabled` in `config.example.yaml` (and in the `config.yaml` rendered from it) defaults to `false`. Set it to `true` and restart to create the accounts
 below and **make every pair mutual contacts**, so you can chat out of the box. The password comes from
 `seed.password` (default `123123`):
 
 | Username | Nickname |
 | --- | --- |
-| `ha1234` | 客服小哈 &nbsp;(Agent Ha) |
-| `wu1234` | 客服小吴 &nbsp;(Agent Wu) |
-| `zhu333` | 客服小朱 &nbsp;(Agent Zhu) |
-| `for505` | 客服505 &nbsp;(Agent 505) |
+| `mini-im-1` | Mini-IM No. 1 |
+| `mini-im-2` | Mini-IM No. 2 |
+| `mini-im-3` | Mini-IM No. 3 |
+| `ha1234` | Xiaoha |
+| `wu1234` | Xiaowu |
+| `zhu333` | Xiaozhu |
+| `goforit` | GoForIt |
 
-Both the usernames and the nicknames live in `seed.accounts` of `config.yaml` — add or remove entries as you like:
+Both the usernames and the nicknames live in `seed.accounts` of the local `config.yaml` — add or remove entries as you like:
 
 ```yaml
 seed:
   enabled: false            # set to true and restart to take effect
   password: "123123"
   accounts:
-    - { username: ha1234,  nickname: 客服小哈 }
-    - { username: wu1234,  nickname: 客服小吴 }
-    - { username: zhu333,  nickname: 客服小朱 }
-    - { username: for505,  nickname: 客服505 }
+    - { username: mini-im-1,  nickname: Mini-IM No. 1 }
+    - { username: mini-im-2,  nickname: Mini-IM No. 2 }
+    - { username: mini-im-3,  nickname: Mini-IM No. 3 }
+    - { username: ha1234,  nickname: Xiaoha }
+    - { username: wu1234,  nickname: Xiaowu }
+    - { username: zhu333,  nickname: Xiaozhu }
+    - { username: goforit,  nickname: GoForIt }
 ```
 
 Seeding is idempotent: if an account already exists, only the nickname and avatar are filled in — the password
@@ -123,7 +130,12 @@ CREATE DATABASE "mini-im" ENCODING 'UTF8';
 
 ### Configuration
 
-`config.yaml` defaults to: PostgreSQL `127.0.0.1:5432` / `postgres` / `123456` / database `mini-im`,
+`config.yaml` is a **local file and is not tracked**: the repository only ships the template
+`config.example.yaml`. With no `config.yaml` present, the first run renders it through the
+[setup wizard](#setup-wizard); alternatively `cp config.example.yaml config.yaml` and edit it yourself.
+`.gitignore` covers both `config.yaml` and the `config.yaml.bak` backup made when reconfiguring — commit neither.
+
+Template defaults: PostgreSQL `127.0.0.1:5432` / `postgres` / `123456` / database `mini-im`,
 Redis `127.0.0.1:6379` DB `1`, HTTP port `8280`.
 `app.name` (default `mini-im`) is also used as the Redis key prefix, so changing it is equivalent to switching
 to a whole new cache namespace.
@@ -344,8 +356,8 @@ Content-Type: application/json
     "user": {
       "id": "364066726138089472",
       "username": "ha1234",
-      "nickname": "客服小哈",
-      "avatar": "/avatar?label=%E5%AE%A2%E6%9C%8D%E5%B0%8F%E5%93%88&name=ha1234"
+      "nickname": "Xiaoha",
+      "avatar": "/avatar?label=Xiaoha&name=ha1234"
     },
     "tokens": { "token": "eyJhbGciOi...", "exp": 1790843147 }
   }
@@ -369,7 +381,7 @@ the entity fields:
   "friend_id": "1",
   "create_time": 1790843147,
   "type": 1,
-  "user": { "id": "1", "nickname": "客服小哈", "avatar": "/avatar?..." }
+  "user": { "id": "1", "nickname": "Xiaoha", "avatar": "/avatar?..." }
 }
 ```
 
@@ -386,7 +398,7 @@ An element of the conversation list `GET /api/messages` looks like this:
   "content_type": "text",
   "uid": "364066726138089472",
   "msg_count": 2,
-  "user": { "id": "364066726138089472", "nickname": "客服小哈", "avatar": "/avatar?..." }
+  "user": { "id": "364066726138089472", "nickname": "Xiaoha", "avatar": "/avatar?..." }
 }
 ```
 
@@ -474,8 +486,8 @@ Current baseline: **94/94 assertions passing**.
 
 ```
 main.go                 Entry point: load config (wizard first if missing) → init components → start serving → graceful shutdown
-config.yaml             Configuration (local)
-config.example.yaml     Config template: the base the setup wizard renders config.yaml from
+config.yaml             Local configuration (not tracked: written by the wizard or copied from the template)
+config.example.yaml     Config template (tracked): the base the setup wizard renders config.yaml from
 docker-compose.yml      PostgreSQL + Redis
 conf/                   Config loading and validation, template-based write-back, Redis key generation
 setup/                  First-run setup wizard (page + connection probe + write-back)
@@ -575,7 +587,7 @@ Time fields are Unix seconds throughout. Friendships are matched bidirectionally
 
 ### Redis keys
 
-The prefix is `app.name` (`mini-im` in `config.yaml`) and all key generation is centralized in `conf/config.go`.
+The prefix is `app.name` (`mini-im` in `config.example.yaml`) and all key generation is centralized in `conf/config.go`.
 
 | Key | Type | Purpose |
 | --- | --- | --- |

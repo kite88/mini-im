@@ -32,7 +32,7 @@ Go + Gin + GORM(PostgreSQL) + Redis 实现的即时通讯 / 客服系统。
 
 ## 界面预览
 
-> 下面的截图都取自 `config.yaml` 中 `seed` 段写入的演示账号（客服小哈 / 客服小吴 / 客服小朱 / 客服505），
+> 下面的截图都取自 `config.example.yaml` 中 `seed` 段写入的演示账号（Mini-IM No. 1 / Xiaoha / Xiaowu / Xiaozhu / GoForIt），
 > 把 `seed.enabled` 改成 `true` 重启即可得到完全一致的初始数据。
 
 ### PC 端
@@ -67,7 +67,8 @@ go run .                      # 启动服务
 ```
 
 > 目录里没有 `config.yaml` 时会先进入[初始化配置向导](#初始化配置向导)：浏览器打开
-> <http://localhost:8280/setup> 填好数据库 / Redis 并保存，服务随即自动启动。
+> <http://localhost:8280/setup> 填好数据库 / Redis 并保存，服务随即自动启动；
+> 也可以先 `cp config.example.yaml config.yaml` 改好配置再启动（`config.yaml` 是本地文件、不入库）。
 
 打开 <http://127.0.0.1:8280/>，会自动跳转到 `/web/index.html`；
 未登录时前端会引导到 `/web/login.html`，注册或登录后进入聊天页。
@@ -77,27 +78,33 @@ go run .                      # 启动服务
 
 ### 演示账号（默认不创建）
 
-`config.yaml` 里 `seed.enabled` 默认是 `false`。改成 `true` 后重启，会写入下面这组账号，
+`config.example.yaml`（以及由它写出的 `config.yaml`）里 `seed.enabled` 默认是 `false`。改成 `true` 后重启，会写入下面这组账号，
 并**两两互加好友**，开箱即可互发消息，密码取 `seed.password`（默认 `123123`）：
 
 | 账号 | 昵称 |
 | --- | --- |
-| `ha1234` | 客服小哈 |
-| `wu1234` | 客服小吴 |
-| `zhu333` | 客服小朱 |
-| `for505` | 客服505 |
+| `mini-im-1` | Mini-IM No. 1 |
+| `mini-im-2` | Mini-IM No. 2 |
+| `mini-im-3` | Mini-IM No. 3 |
+| `ha1234` | Xiaoha |
+| `wu1234` | Xiaowu |
+| `zhu333` | Xiaozhu |
+| `goforit` | GoForIt |
 
-账号名与昵称都在 `config.yaml` 的 `seed.accounts` 里，按需增删即可：
+账号名与昵称都在本地 `config.yaml` 的 `seed.accounts` 里，按需增删即可：
 
 ```yaml
 seed:
   enabled: false            # 改成 true 后重启生效
   password: "123123"
   accounts:
-    - { username: ha1234,  nickname: 客服小哈 }
-    - { username: wu1234,  nickname: 客服小吴 }
-    - { username: zhu333,  nickname: 客服小朱 }
-    - { username: for505,  nickname: 客服505 }
+    - { username: mini-im-1,  nickname: Mini-IM No. 1 }
+    - { username: mini-im-2,  nickname: Mini-IM No. 2 }
+    - { username: mini-im-3,  nickname: Mini-IM No. 3 }
+    - { username: ha1234,  nickname: Xiaoha }
+    - { username: wu1234,  nickname: Xiaowu }
+    - { username: zhu333,  nickname: Xiaozhu }
+    - { username: goforit,  nickname: GoForIt }
 ```
 
 初始化是幂等的：账号已存在时只补齐昵称与头像，不覆盖密码，重复启动安全。
@@ -117,7 +124,11 @@ CREATE DATABASE "mini-im" ENCODING 'UTF8';
 
 ### 配置
 
-`config.yaml` 默认为：PostgreSQL `127.0.0.1:5432` / `postgres` / `123456` / 库 `mini-im`，
+`config.yaml` 是**本地文件、不入库**：仓库里只带模板 `config.example.yaml`，首次启动没有 `config.yaml`
+时由[初始化配置向导](#初始化配置向导)按模板写出，也可以自己 `cp config.example.yaml config.yaml` 后修改。
+`.gitignore` 已忽略 `config.yaml` 与向导重配时的备份 `config.yaml.bak`，两者都不要提交。
+
+模板默认值：PostgreSQL `127.0.0.1:5432` / `postgres` / `123456` / 库 `mini-im`，
 Redis `127.0.0.1:6379` DB `1`，HTTP 端口 `8280`。
 `app.name`（默认 `mini-im`）同时作为 Redis key 的前缀，改它等于换一套缓存命名空间。
 
@@ -322,8 +333,8 @@ Content-Type: application/json
     "user": {
       "id": "364066726138089472",
       "username": "ha1234",
-      "nickname": "客服小哈",
-      "avatar": "/avatar?label=%E5%AE%A2%E6%9C%8D%E5%B0%8F%E5%93%88&name=ha1234"
+      "nickname": "Xiaoha",
+      "avatar": "/avatar?label=Xiaoha&name=ha1234"
     },
     "tokens": { "token": "eyJhbGciOi...", "exp": 1790843147 }
   }
@@ -345,7 +356,7 @@ Content-Type: application/json
   "friend_id": "1",
   "create_time": 1790843147,
   "type": 1,
-  "user": { "id": "1", "nickname": "客服小哈", "avatar": "/avatar?..." }
+  "user": { "id": "1", "nickname": "Xiaoha", "avatar": "/avatar?..." }
 }
 ```
 
@@ -361,7 +372,7 @@ Content-Type: application/json
   "content_type": "text",
   "uid": "364066726138089472",
   "msg_count": 2,
-  "user": { "id": "364066726138089472", "nickname": "客服小哈", "avatar": "/avatar?..." }
+  "user": { "id": "364066726138089472", "nickname": "Xiaoha", "avatar": "/avatar?..." }
 }
 ```
 
@@ -444,8 +455,8 @@ redis-cli -n 1 flushdb
 
 ```
 main.go                 入口：加载配置（缺失则先进向导）→ 初始化组件 → 启动服务 → 优雅退出
-config.yaml             配置（本地）
-config.example.yaml     配置模板：初始化向导写回 config.yaml 时的底稿
+config.yaml             本地配置（不入库：向导写出或复制模板生成）
+config.example.yaml     配置模板（入库）：初始化向导写回 config.yaml 时的底稿
 docker-compose.yml      PostgreSQL + Redis
 conf/                   配置加载与校验、按模板渲染写回、Redis key 生成
 setup/                  首次启动的初始化配置向导（页面 + 连接探测 + 写回）
@@ -537,7 +548,7 @@ node tools/trim-bootstrap.cjs --write    # 校验通过后写入
 
 ### Redis key
 
-前缀取 `app.name`（`config.yaml` 中为 `mini-im`），生成逻辑集中在 `conf/config.go`。
+前缀取 `app.name`（`config.example.yaml` 中为 `mini-im`），生成逻辑集中在 `conf/config.go`。
 
 | Key | 类型 | 用途 |
 | --- | --- | --- |

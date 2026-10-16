@@ -9,7 +9,10 @@
 # 发布产物（build.sh / release workflow 的输出）
 /dist/
 
-# 本地覆盖配置（默认 config.yaml 需要入库）
+# 本地配置：仓库只带模板 config.example.yaml，config.yaml 由初始化向导写出
+# （或手工复制模板生成），属于每台机器自己的东西，不入库；.bak 是向导重配时的备份
+/config.yaml
+/config.yaml.bak
 *.local.yaml
 .env
 

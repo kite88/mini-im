@@ -58,7 +58,10 @@ seed:
   enabled: false            # 设为 true 时下面 password 必填
   password: "123123"        # 演示账号的统一密码
   accounts:
-    - { username: ha1234,  nickname: 客服小哈 }
-    - { username: wu1234,  nickname: 客服小吴 }
-    - { username: zhu333,  nickname: 客服小朱 }
-    - { username: for505,  nickname: 客服505 }
+    - { username: mini-im-1,  nickname: Mini-IM No. 1 }
+    - { username: mini-im-2,  nickname: Mini-IM No. 2 }
+    - { username: mini-im-3,  nickname: Mini-IM No. 3 }
+    - { username: ha1234,  nickname: Xiaoha }
+    - { username: wu1234,  nickname: Xiaowu }
+    - { username: zhu333,  nickname: Xiaozhu }
+    - { username: goforit,  nickname: GoForIt }
