@@ -2,6 +2,17 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)，版本号形如 `v主版本.次版本.修订号`。
 
+## [v1.1.1] - 2026-10-16
+
+### 修复
+
+- **首屏闪烁**：聊天页与登录页在 Vue 编译前会先把原始模板画出来，刷新时能看到 `{{ }}` 原文，以及表情盘 / 设置面板 / 弹窗遮罩闪一下。现在两端根节点都挂 `v-cloak` 整块隐藏（编译完成由 Vue 移除属性），编译期间用 `#boot-mask` 占位顶住画面（`mounted` 后移除，另有 6 秒兜底淡出，脚本加载失败也不会永久遮挡）；带 `v-show` 的浮层与登录页的注册表单补了初始 `display: none`。规则统一收在共用的 `common.css`，两个页面引用它的缓存串更新为 `?v=20261016`。
+
+### 工程
+
+- **README 截图全部重截**（PC 端 1280×800、登录 / 注册页 900×620、手机端 390×844）：截图取自真实运行的实例，演示账号与 `config.example.yaml` 的 `seed.accounts` 对齐（Mini-IM No. 1 / No. 2 / No. 3、Xiaoha、Xiaowu、Xiaozhu、GoForIt），界面标题也已换成 `Mini-IM`；README / README.en.md 中演示账号表、`seed.accounts` 片段与接口示例里的昵称同步更新。
+- **`config.yaml` 不再入库**：`.gitignore` 新增 `/config.yaml` 与 `/config.yaml.bak`，仓库只带模板 `config.example.yaml`，本地配置由初始化配置向导写出或 `cp config.example.yaml config.yaml` 生成；此前入库的 `config.yaml` 带着开发用的 JWT 密钥与本地库名（如 `mini-im-2`），每次改配置都得在提交里挑拣。README / README.en.md 的快速开始、配置、项目结构与 Redis key 前缀说明已同步改为指向模板。
+
 ## [v1.1.0] - 2026-10-16
 
 新增首次启动的初始化配置向导，发布包改为「不带配置文件、首次启动现场生成」的形态。

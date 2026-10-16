@@ -20,18 +20,20 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>mini-im</title>
+    <title>Mini-IM</title>
     <meta name="keywords" content="IM系统,客服系统,h5聊天工具,web聊天工具,h5即时通讯,web即时通讯"/>
     <meta name="description" content="这是一个基于websocket的聊天工具"/>
     <link rel="shortcut icon" href="/web/favicon.ico">
     <link rel="stylesheet" href="/web/assets/lib/bootstrap-3.3.7/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/web/assets/css/1.0.0/common.css?v=20261001">
+    <link rel="stylesheet" href="/web/assets/css/1.0.0/common.css?v=20261016">
     <link rel="stylesheet" href="/web/assets/css/1.0.0/style.css?v=20261001">
 </head>
 <body>
-<div id="app" class="container" v-bind:class="{'app-mobile-chat': mobileChatOpen}">
+<!-- 首屏占位：位于 #app 之外，Vue 挂载后由脚本移除 -->
+<div id="boot-mask"></div>
+<div id="app" v-cloak class="container" v-bind:class="{'app-mobile-chat': mobileChatOpen}">
     <div class="page-head">
-        <h1>mini-im</h1>
+        <h1>Mini-IM</h1>
         <div class="settings-wrap" @click.stop="settingOpen = !settingOpen">
             <button type="button" class="settings-btn" v-bind:class="{active: settingOpen}"
                     :title="t('settings.title')">
@@ -46,7 +48,7 @@
     <div class="cont-box" @click="forBoxSwitch(false)">
         <div class="col-md-4 left-box">
             <div class="col-md-2 left-nav">
-                <div class="user-info-box" v-show="isUserInfoBoxShow" @click.stop="boxEmojiShow = 0">
+                <div class="user-info-box" v-show="isUserInfoBoxShow" style="display:none" @click.stop="boxEmojiShow = 0">
                     <!-- 头像与资料同一行：头像在左，右侧昵称 / 账号两行 -->
                     <div class="user-info-head">
                         <div class="user-info-avatar">
@@ -237,9 +239,9 @@
                         </li>
                     </template>
                 </ul>
-                <div class="chat-edit" v-show="to_uid">
+                <div class="chat-edit" v-show="to_uid" style="display:none">
                     <div class="chat-edit-head">
-                        <div v-show="isEmojiShow = boxEmojiShow === 1" class="emoji-box">
+                        <div v-show="isEmojiShow = boxEmojiShow === 1" style="display:none" class="emoji-box">
                             <a class="emoji">😀</a>
                             <a class="emoji">😃</a>
                             <a class="emoji">😄</a>
@@ -408,7 +410,7 @@
                             <a class="emoji">👨</a>
                             <a class="emoji">🧔</a>
                         </div>
-                        <div v-show="isEmojiShow = boxEmojiShow === 2" class="emoji-box">
+                        <div v-show="isEmojiShow = boxEmojiShow === 2" style="display:none" class="emoji-box">
                             <a class="emoji-image"><img src="/web/assets/image/emoji/emoji_u1f600.png" alt=""></a>
                             <a class="emoji-image"><img src="/web/assets/image/emoji/emoji_u1f602.png" alt=""></a>
                             <a class="emoji-image"><img src="/web/assets/image/emoji/emoji_u1f603.png" alt=""></a>
@@ -464,7 +466,7 @@
             </div>
         </div>
         <!-- 设置抽屉：贴在容器（.cont-box）右侧从右滑出，主题模式 / 多语言两组选项 -->
-        <div class="settings-panel settings-panel-drawer" v-show="settingOpen" @click.stop>
+        <div class="settings-panel settings-panel-drawer" v-show="settingOpen" style="display:none" @click.stop>
             <div class="settings-section">
                 <div class="settings-title">{{t('settings.themeMode')}}</div>
                 <div class="theme-switch">
@@ -522,8 +524,8 @@
                 </div>
                 </div>
     </div>
-    <div class="shade shade-alert" v-show="alertBoxParam.isShow">
-        <div class="alert-box" v-show="alertBoxParam.isShow">
+    <div class="shade shade-alert" v-show="alertBoxParam.isShow" style="display:none">
+        <div class="alert-box" v-show="alertBoxParam.isShow" style="display:none">
             <div class="alert-box-head">
                 <span class="alert-box-title">{{alertBoxParam.title}}</span>
                 <span class="alert-box-close" @click="alertBoxParam.isShow = false">✕</span>
@@ -535,7 +537,7 @@
         </div>
     </div>
     <!-- 添加好友：按账号 / 昵称搜索用户并发送申请 -->
-    <div class="shade" v-show="addFriendShow" @click="closeAddFriend">
+    <div class="shade" v-show="addFriendShow" style="display:none" @click="closeAddFriend">
         <div class="dialog" @click.stop>
             <div class="dialog-head">
                 <span class="dialog-title">{{t('index.addFriend')}}</span>
@@ -697,6 +699,11 @@
             }
         },
         mounted() {
+            // 编译完成、首帧已渲染，移除首屏占位（占位在 #app 之外，不会被模板替换掉）
+            var bootMask = document.getElementById('boot-mask')
+            if (bootMask && bootMask.parentNode) {
+                bootMask.parentNode.removeChild(bootMask)
+            }
             this.wsInit()
             var _this = this
             // 预加载提示音并等待首次用户手势解锁（移动端自动播放策略要求）

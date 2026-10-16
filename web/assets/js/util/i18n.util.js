@@ -26,8 +26,8 @@ I18nUtil.HTML_LANGS = {'zh-CN': 'zh-CN', 'en-US': 'en'};
 
 I18nUtil.MESSAGES = {
     'zh-CN': {
-        'page.loginTitle': 'mini-im登录',
-        'page.indexTitle': 'mini-im',
+        'page.loginTitle': 'Mini-IM登录',
+        'page.indexTitle': 'Mini-IM',
 
         'common.tip': '提示',
         'common.confirm': '确认',
@@ -133,8 +133,8 @@ I18nUtil.MESSAGES = {
         'index.socketUnsupported': '您的浏览器不支持 socket'
     },
     'en-US': {
-        'page.loginTitle': 'mini-im Sign In',
-        'page.indexTitle': 'mini-im',
+        'page.loginTitle': 'Mini-IM Sign In',
+        'page.indexTitle': 'Mini-IM',
 
         'common.tip': 'Notice',
         'common.confirm': 'OK',

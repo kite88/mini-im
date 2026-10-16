@@ -526,3 +526,53 @@ button,
         animation: none;
     }
 }
+
+/* ========== 首屏防闪（登录页与首页共用） ==========
+   Vue 编译之前，DOM 里还是原始模板：{{ }} 会以纯文本出现，带 v-show 的浮层/面板
+   （表情盘、设置面板、弹窗遮罩）也还没被隐藏，刷新页面时能看到它们闪一下。
+   处理办法是给根节点挂 v-cloak 整块隐藏，编译完成（属性被移除）后再显形；
+   编译期间用 #boot-mask 顶住画面，避免白屏。 */
+#app[v-cloak] {
+    display: none !important;
+}
+
+/* 编译期间的占位：必须放在 #app 之外，否则会被当成模板整体替换掉 */
+#boot-mask {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-body, #eef1f6);
+    /* 兜底：Vue 加载或初始化失败时占位不会永久遮住页面（正常链路由 mounted 移除） */
+    animation: boot-mask-hide .3s ease 6s forwards;
+}
+
+@keyframes boot-mask-hide {
+    to {
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
+#boot-mask::after {
+    content: '';
+    width: 28px;
+    height: 28px;
+    border: 2px solid var(--border, #e3e6eb);
+    border-top-color: var(--accent, #4e8cff);
+    border-radius: 50%;
+    animation: boot-mask-spin .8s linear infinite;
+}
+
+@keyframes boot-mask-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #boot-mask::after {
+        animation: none;
+    }
+}

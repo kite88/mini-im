@@ -20,16 +20,18 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>mini-im</title>
+    <title>Mini-IM</title>
     <meta name="keywords" content="IM系统,客服系统,h5聊天工具,web聊天工具,h5即时通讯,web即时通讯"/>
     <meta name="description" content="这是一个基于websocket的聊天工具"/>
     <link rel="shortcut icon" href="/web/favicon.ico">
     <link rel="stylesheet" href="/web/assets/lib/bootstrap-3.3.7/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/web/assets/css/1.0.0/common.css?v=20261001">
+    <link rel="stylesheet" href="/web/assets/css/1.0.0/common.css?v=20261016">
     <link rel="stylesheet" href="/web/assets/css/1.0.0/login.css?v=20261001">
 </head>
 <body>
-<div id="app" class="container">
+<!-- 首屏占位：位于 #app 之外，Vue 挂载后由脚本移除 -->
+<div id="boot-mask"></div>
+<div id="app" v-cloak class="container">
     <div class="login-box col-md-3" :class="{'is-register': mode === 'register'}">
         <div class="settings-wrap" @click.stop="settingOpen = !settingOpen">
             <button type="button" class="settings-btn" v-bind:class="{active: settingOpen}"
@@ -40,7 +42,7 @@
                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
                 </svg>
             </button>
-            <div class="settings-panel" v-show="settingOpen">
+            <div class="settings-panel" v-show="settingOpen" style="display:none">
                 <div class="theme-switch" :title="t('theme.title')">
                     <button type="button" class="theme-btn" v-bind:class="{active: theme === 'light'}"
                             @click="setTheme('light')" :title="t('theme.light')">
@@ -71,7 +73,7 @@
                 </div>
             </div>
         </div>
-        <h1>mini-im</h1>
+        <h1>Mini-IM</h1>
         <form class="form-horizontal" role="form" v-show="mode === 'login'">
             <div class="form-group">
                 <label for="username" class="col-sm-2 control-label">{{t('login.username')}}</label>
@@ -108,7 +110,7 @@
                 <a href="javascript:" @click="switchMode('register')">{{t('register.toRegister')}}</a>
             </div>
         </form>
-        <form class="form-horizontal" role="form" v-show="mode === 'register'">
+        <form class="form-horizontal" role="form" v-show="mode === 'register'" style="display:none">
             <div class="form-group">
                 <label for="regUsername" class="col-sm-2 control-label">{{t('register.username')}}</label>
                 <div class="col-sm-10">
@@ -148,8 +150,8 @@
             </div>
         </form>
     </div>
-    <div class="shade" v-show="alertBoxParam.isShow">
-        <div class="alert-box" v-show="alertBoxParam.isShow">
+    <div class="shade" v-show="alertBoxParam.isShow" style="display:none">
+        <div class="alert-box" v-show="alertBoxParam.isShow" style="display:none">
             <div class="alert-box-head">
                 <span class="alert-box-title">{{alertBoxParam.title}}</span>
                 <span class="alert-box-close" @click="alertBoxParam.isShow = false">✕</span>
@@ -223,6 +225,11 @@
             }
         },
         mounted() {
+            // 编译完成、首帧已渲染，移除首屏占位（占位在 #app 之外，不会被模板替换掉）
+            var bootMask = document.getElementById('boot-mask')
+            if (bootMask && bootMask.parentNode) {
+                bootMask.parentNode.removeChild(bootMask)
+            }
             // 点击页面其他位置时收起设置面板
             var _this = this
             document.addEventListener('click', function () {
