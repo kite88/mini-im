@@ -1,6 +1,6 @@
 [简体中文](README.md) | **English**
 
-# mini-im
+# Mini-IM
 
 [![Release](https://img.shields.io/github/v/release/kite88/mini-im)](https://github.com/kite88/mini-im/releases/latest)
 [![License](https://img.shields.io/github/license/kite88/mini-im)](LICENSE)
